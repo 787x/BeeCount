@@ -25,6 +25,8 @@ class MainActivity: FlutterFragmentActivity() {
     private val LOGGER_CHANNEL = "com.beecount.logger"
     private val SHARE_CHANNEL = "com.tntlikely.beecount/share"
 
+    private var speechBridge: SpeechRecognitionBridge? = null
+
     private var screenshotObserver: ScreenshotObserver? = null
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -132,6 +134,8 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        speechBridge?.dispose()
+        speechBridge = SpeechRecognitionBridge(this, flutterEngine.dartExecutor.binaryMessenger)
 
         android.util.Log.e("MainActivity", "==========================================")
         android.util.Log.e("MainActivity", "configureFlutterEngine 被调用！！！")
@@ -548,6 +552,8 @@ class MainActivity: FlutterFragmentActivity() {
     }
 
     override fun onDestroy() {
+        speechBridge?.dispose()
+        speechBridge = null
         super.onDestroy()
         stopScreenshotObserver()
     }

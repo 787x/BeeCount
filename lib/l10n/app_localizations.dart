@@ -15655,6 +15655,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This transaction cannot be copied. Check the ledger and your access.'**
   String get transactionCopyUnavailable;
+
+  /// No description provided for @speechRecognitionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition'**
+  String get speechRecognitionMode;
+
+  /// No description provided for @speechModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (recommended)'**
+  String get speechModeAuto;
+
+  /// No description provided for @speechModeOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Android on-device'**
+  String get speechModeOnDevice;
+
+  /// No description provided for @speechModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Android system'**
+  String get speechModeSystem;
+
+  /// No description provided for @speechModeCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud AI'**
+  String get speechModeCloud;
+
+  /// No description provided for @speechModeAutoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer on-device, then system recognition, then cloud AI when neither is available.'**
+  String get speechModeAutoDesc;
+
+  /// No description provided for @speechModeOnDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only supported on-device recognition.'**
+  String get speechModeOnDeviceDesc;
+
+  /// No description provided for @speechModeSystemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the system speech service, which may need a network connection.'**
+  String get speechModeSystemDesc;
+
+  /// No description provided for @speechModeCloudDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the configured speech model.'**
+  String get speechModeCloudDesc;
+
+  /// No description provided for @speechOnDeviceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device recognition is unavailable. Choose automatic, system or cloud mode.'**
+  String get speechOnDeviceUnavailable;
+
+  /// No description provided for @speechSystemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No system speech recognition service is available.'**
+  String get speechSystemUnavailable;
+
+  /// No description provided for @speechCloudUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a cloud speech model first.'**
+  String get speechCloudUnavailable;
+
+  /// No description provided for @speechUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognition is available. Check the system speech service or configure a cloud speech model.'**
+  String get speechUnavailable;
+
+  /// No description provided for @speechBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is busy. Try again later.'**
+  String get speechBusy;
+
+  /// No description provided for @speechNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition could not connect. Try again.'**
+  String get speechNetworkError;
+
+  /// No description provided for @speechRecognitionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition failed. Try again.'**
+  String get speechRecognitionFailed;
+
+  /// No description provided for @speechListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get speechListening;
+
+  /// No description provided for @speechInputAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input'**
+  String get speechInputAction;
+
+  /// No description provided for @speechCloudSilenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence timeout only affects automatic cloud recording. System recognition detects the end of speech itself.'**
+  String get speechCloudSilenceHint;
+
+  /// No description provided for @billingQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick bookkeeping'**
+  String get billingQuickActions;
+
+  /// No description provided for @billingManualAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual entry'**
+  String get billingManualAction;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

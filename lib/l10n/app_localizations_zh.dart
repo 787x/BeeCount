@@ -8260,6 +8260,69 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transactionCopyUnavailable => '无法复制这笔交易，请检查账本和访问权限。';
+
+  @override
+  String get speechRecognitionMode => '语音识别方式';
+
+  @override
+  String get speechModeAuto => '自动（推荐）';
+
+  @override
+  String get speechModeOnDevice => 'Android 端侧识别';
+
+  @override
+  String get speechModeSystem => 'Android 系统识别';
+
+  @override
+  String get speechModeCloud => '云端 AI';
+
+  @override
+  String get speechModeAutoDesc => '优先端侧，其次系统服务，均不可用时使用云端 AI。';
+
+  @override
+  String get speechModeOnDeviceDesc => '仅使用设备支持的端侧识别。';
+
+  @override
+  String get speechModeSystemDesc => '使用系统语音服务，可能需要网络。';
+
+  @override
+  String get speechModeCloudDesc => '使用当前配置的语音模型。';
+
+  @override
+  String get speechOnDeviceUnavailable => '此设备不支持端侧识别，请切换自动、系统或云端模式。';
+
+  @override
+  String get speechSystemUnavailable => '系统没有可用的语音识别服务。';
+
+  @override
+  String get speechCloudUnavailable => '请先配置云端语音模型。';
+
+  @override
+  String get speechUnavailable => '没有可用的语音识别方式，请检查系统语音服务或配置云端语音模型。';
+
+  @override
+  String get speechBusy => '语音服务正在使用，请稍后重试。';
+
+  @override
+  String get speechNetworkError => '语音识别网络连接失败，请重试。';
+
+  @override
+  String get speechRecognitionFailed => '语音识别失败，请重试。';
+
+  @override
+  String get speechListening => '正在听，请说话…';
+
+  @override
+  String get speechInputAction => '语音输入';
+
+  @override
+  String get speechCloudSilenceHint => '静音时长仅影响云端自动录音；系统识别自行判断说话结束。';
+
+  @override
+  String get billingQuickActions => '快捷记账';
+
+  @override
+  String get billingManualAction => '手动记账';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -15875,4 +15938,67 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get annualReportDownloadHint => '掃碼下載蜜蜂記帳，開啟你的記帳之旅';
+
+  @override
+  String get speechRecognitionMode => '語音辨識方式';
+
+  @override
+  String get speechModeAuto => '自動（推薦）';
+
+  @override
+  String get speechModeOnDevice => 'Android 裝置端辨識';
+
+  @override
+  String get speechModeSystem => 'Android 系統辨識';
+
+  @override
+  String get speechModeCloud => '雲端 AI';
+
+  @override
+  String get speechModeAutoDesc => '優先裝置端，其次系統服務，均不可用時使用雲端 AI。';
+
+  @override
+  String get speechModeOnDeviceDesc => '僅使用裝置支援的端側辨識。';
+
+  @override
+  String get speechModeSystemDesc => '使用系統語音服務，可能需要網路。';
+
+  @override
+  String get speechModeCloudDesc => '使用目前設定的語音模型。';
+
+  @override
+  String get speechOnDeviceUnavailable => '此裝置不支援端側辨識，請切換自動、系統或雲端模式。';
+
+  @override
+  String get speechSystemUnavailable => '系統沒有可用的語音辨識服務。';
+
+  @override
+  String get speechCloudUnavailable => '請先設定雲端語音模型。';
+
+  @override
+  String get speechUnavailable => '沒有可用的語音辨識方式，請檢查系統服務或設定雲端語音模型。';
+
+  @override
+  String get speechBusy => '語音服務正在使用，請稍後重試。';
+
+  @override
+  String get speechNetworkError => '語音辨識網路連線失敗，請重試。';
+
+  @override
+  String get speechRecognitionFailed => '語音辨識失敗，請重試。';
+
+  @override
+  String get speechListening => '正在聆聽，請說話…';
+
+  @override
+  String get speechInputAction => '語音輸入';
+
+  @override
+  String get speechCloudSilenceHint => '靜音時間僅影響雲端自動錄音；系統辨識自行判斷說話結束。';
+
+  @override
+  String get billingQuickActions => '快捷記帳';
+
+  @override
+  String get billingManualAction => '手動記帳';
 }

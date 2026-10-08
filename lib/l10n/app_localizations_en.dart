@@ -8268,4 +8268,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionCopyUnavailable => 'This transaction cannot be copied. Check the ledger and your access.';
+
+  @override
+  String get speechRecognitionMode => 'Speech recognition';
+
+  @override
+  String get speechModeAuto => 'Automatic (recommended)';
+
+  @override
+  String get speechModeOnDevice => 'Android on-device';
+
+  @override
+  String get speechModeSystem => 'Android system';
+
+  @override
+  String get speechModeCloud => 'Cloud AI';
+
+  @override
+  String get speechModeAutoDesc => 'Prefer on-device, then system recognition, then cloud AI when neither is available.';
+
+  @override
+  String get speechModeOnDeviceDesc => 'Use only supported on-device recognition.';
+
+  @override
+  String get speechModeSystemDesc => 'Use the system speech service, which may need a network connection.';
+
+  @override
+  String get speechModeCloudDesc => 'Use the configured speech model.';
+
+  @override
+  String get speechOnDeviceUnavailable => 'On-device recognition is unavailable. Choose automatic, system or cloud mode.';
+
+  @override
+  String get speechSystemUnavailable => 'No system speech recognition service is available.';
+
+  @override
+  String get speechCloudUnavailable => 'Configure a cloud speech model first.';
+
+  @override
+  String get speechUnavailable => 'No speech recognition is available. Check the system speech service or configure a cloud speech model.';
+
+  @override
+  String get speechBusy => 'Speech recognition is busy. Try again later.';
+
+  @override
+  String get speechNetworkError => 'Speech recognition could not connect. Try again.';
+
+  @override
+  String get speechRecognitionFailed => 'Speech recognition failed. Try again.';
+
+  @override
+  String get speechListening => 'Listening…';
+
+  @override
+  String get speechInputAction => 'Voice input';
+
+  @override
+  String get speechCloudSilenceHint => 'Silence timeout only affects automatic cloud recording. System recognition detects the end of speech itself.';
+
+  @override
+  String get billingQuickActions => 'Quick bookkeeping';
+
+  @override
+  String get billingManualAction => 'Manual entry';
 }

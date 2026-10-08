@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:uuid/uuid.dart';
 
+import '../../widgets/ai/speech_input_button.dart';
 import '../../widgets/ui/ui.dart';
 import '../../widgets/ai/typewriter_text.dart';
 import '../../widgets/ai/agent_reasoning_panel.dart';
@@ -703,6 +704,8 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
         top: false, // 不保护顶部，避免额外空白
         child: Row(
           children: [
+            SpeechInputButton(
+                controller: _inputController, enabled: !_isLoading),
             Expanded(
               child: TextField(
                 controller: _inputController,

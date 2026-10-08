@@ -8268,4 +8268,67 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get transactionCopyUnavailable => 'This transaction cannot be copied. Check the ledger and your access.';
+
+  @override
+  String get speechRecognitionMode => '음성 인식 방식';
+
+  @override
+  String get speechModeAuto => '자동 (권장)';
+
+  @override
+  String get speechModeOnDevice => 'Android 기기 내 인식';
+
+  @override
+  String get speechModeSystem => 'Android 시스템 인식';
+
+  @override
+  String get speechModeCloud => '클라우드 AI';
+
+  @override
+  String get speechModeAutoDesc => '기기 내 인식, 시스템 인식 순으로 시도하고 둘 다 사용할 수 없으면 클라우드 AI를 사용합니다.';
+
+  @override
+  String get speechModeOnDeviceDesc => '지원되는 기기 내 인식만 사용합니다.';
+
+  @override
+  String get speechModeSystemDesc => '시스템 음성 서비스를 사용하며 네트워크가 필요할 수 있습니다.';
+
+  @override
+  String get speechModeCloudDesc => '설정된 음성 모델을 사용합니다.';
+
+  @override
+  String get speechOnDeviceUnavailable => '기기 내 인식을 지원하지 않습니다. 자동, 시스템 또는 클라우드 모드를 선택하세요.';
+
+  @override
+  String get speechSystemUnavailable => '사용 가능한 시스템 음성 서비스가 없습니다.';
+
+  @override
+  String get speechCloudUnavailable => '먼저 클라우드 음성 모델을 설정하세요.';
+
+  @override
+  String get speechUnavailable => '사용 가능한 음성 인식이 없습니다. 시스템 서비스를 확인하거나 클라우드 모델을 설정하세요.';
+
+  @override
+  String get speechBusy => '음성 서비스 사용 중입니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get speechNetworkError => '음성 인식 연결 실패. 다시 시도하세요.';
+
+  @override
+  String get speechRecognitionFailed => '음성 인식 실패. 다시 시도하세요.';
+
+  @override
+  String get speechListening => '듣고 있습니다…';
+
+  @override
+  String get speechInputAction => '음성 입력';
+
+  @override
+  String get speechCloudSilenceHint => '무음 시간은 자동 클라우드 녹음에만 적용됩니다. 시스템은 발화 종료를 자체 판단합니다.';
+
+  @override
+  String get billingQuickActions => '빠른 기록';
+
+  @override
+  String get billingManualAction => '수동 기록';
 }

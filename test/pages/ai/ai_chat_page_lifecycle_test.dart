@@ -22,6 +22,7 @@ import 'package:beecount/services/ai/ai_bookkeeper.dart';
 import 'package:beecount/services/ai/ai_chat_service.dart';
 import 'package:beecount/services/ai/agent_app_facade.dart';
 import 'package:beecount/services/billing/bill_creation_service.dart';
+import 'package:beecount/utils/speech_input_helper.dart';
 import 'package:beecount/widgets/ai/agent_brand_mark.dart';
 import 'package:beecount/widgets/ai/agent_execution_timeline.dart';
 import 'package:beecount/widgets/ai/agent_markdown_text.dart';
@@ -59,7 +60,7 @@ void main() {
 
   tearDown(() => database.close());
 
-  Widget host({core.AgentModel? model}) {
+  Widget host({core.AgentModel? model, SpeechInputRequest? speechInput}) {
     final memory = LocalAgentMemoryRepository(database);
     final bookkeeper = AiBookkeeper(
       repository: repository,
@@ -89,6 +90,8 @@ void main() {
     );
     return ProviderScope(
       overrides: [
+        if (speechInput != null)
+          speechInputRequestProvider.overrideWithValue(speechInput),
         databaseProvider.overrideWithValue(database),
         repositoryProvider.overrideWithValue(repository),
         aiChatServiceProvider.overrideWithValue(chatService),
@@ -101,6 +104,32 @@ void main() {
       ),
     );
   }
+
+  testWidgets(
+      'Chat microphone preserves draft and does not send; cancel keeps input',
+      (tester) async {
+    await repository.createLedger(name: '当前账本');
+    String? transcript = '午饭35';
+    await tester.pumpWidget(host(speechInput: (_, __) async => transcript));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('speech-input-mic')), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '已有草稿');
+    await tester.tap(find.byKey(const ValueKey('speech-input-mic')));
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        '已有草稿 午饭35');
+    final messages = await database.select(database.messages).get();
+    expect(messages.where((message) => message.role == 'user'), isEmpty);
+    transcript = null;
+    await tester.tap(find.byKey(const ValueKey('speech-input-mic')));
+    await tester.pumpAndSettle();
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        '已有草稿 午饭35');
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
 
   testWidgets('reasoning 流式显示、完整保存并默认折叠，复制仅包含最终正文', (tester) async {
     await repository.createLedger(name: '当前账本');
@@ -121,6 +150,11 @@ void main() {
     await tester.enterText(find.byType(TextField).first, '你好');
     await tester.testTextInput.receiveAction(TextInputAction.send);
     await _pumpUntil(tester, () => model.request != null);
+    expect(
+        tester
+            .widget<IconButton>(find.byKey(const ValueKey('speech-input-mic')))
+            .onPressed,
+        isNull);
     model.request!.nativeStreamSink
         ?.call(const core.AgentNativeReasoningDelta('第一段思考'));
     await tester.pump();
