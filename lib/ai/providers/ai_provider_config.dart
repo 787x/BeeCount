@@ -1,3 +1,8 @@
+import 'xiaomi_mimo_profile.dart';
+
+/// 显式选择请求协议；旧自定义配置继续使用 OpenAI-compatible。
+enum AIProviderDialect { openAiCompatible, xiaomiMiMo }
+
 /// AI 服务商配置
 ///
 /// 存储单个服务商的完整配置信息
@@ -8,7 +13,7 @@ class AIServiceProviderConfig {
   /// 显示名称（如"智谱GLM"、"硅基流动"）
   final String name;
 
-  /// 是否为内置服务商（智谱GLM 是内置的，不可删除）
+  /// 是否为内置服务商（不可删除）
   final bool isBuiltIn;
 
   /// API Key
@@ -26,6 +31,18 @@ class AIServiceProviderConfig {
   /// 语音模型
   final String audioModel;
 
+  /// Provider 请求协议。
+  final AIProviderDialect dialect;
+
+  /// MiMo 深度思考设置（不影响 ASR）。
+  final bool thinkingEnabled;
+
+  /// 只有显式选择 MiMo 协议才应用其请求语义。
+  bool get isXiaomiMiMo => dialect == AIProviderDialect.xiaomiMiMo;
+
+  /// 旧内置智谱配置继续使用现有 SDK。
+  bool get isZhipu => isBuiltIn && id == 'zhipu_glm';
+
   /// 创建时间
   final DateTime createdAt;
 
@@ -38,8 +55,23 @@ class AIServiceProviderConfig {
     this.textModel = '',
     this.visionModel = '',
     this.audioModel = '',
+    this.dialect = AIProviderDialect.openAiCompatible,
+    this.thinkingEnabled = true,
     required this.createdAt,
   });
+
+  /// 小米 MiMo 按量 API 内置配置。
+  static AIServiceProviderConfig get xiaomiDefault => AIServiceProviderConfig(
+        id: XiaomiMiMoProfile.providerId,
+        name: 'Xiaomi MiMo',
+        isBuiltIn: true,
+        dialect: AIProviderDialect.xiaomiMiMo,
+        baseUrl: XiaomiMiMoProfile.baseUrl,
+        textModel: XiaomiMiMoProfile.generationModel,
+        visionModel: XiaomiMiMoProfile.generationModel,
+        audioModel: XiaomiMiMoProfile.asrModel,
+        createdAt: DateTime(2026, 1, 1),
+      );
 
   /// 智谱GLM 默认配置
   static AIServiceProviderConfig get zhipuDefault => AIServiceProviderConfig(
@@ -75,6 +107,8 @@ class AIServiceProviderConfig {
     String? textModel,
     String? visionModel,
     String? audioModel,
+    AIProviderDialect? dialect,
+    bool? thinkingEnabled,
     DateTime? createdAt,
   }) {
     return AIServiceProviderConfig(
@@ -86,6 +120,8 @@ class AIServiceProviderConfig {
       textModel: textModel ?? this.textModel,
       visionModel: visionModel ?? this.visionModel,
       audioModel: audioModel ?? this.audioModel,
+      dialect: dialect ?? this.dialect,
+      thinkingEnabled: thinkingEnabled ?? this.thinkingEnabled,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -101,6 +137,10 @@ class AIServiceProviderConfig {
       textModel: json['textModel'] as String? ?? '',
       visionModel: json['visionModel'] as String? ?? '',
       audioModel: json['audioModel'] as String? ?? '',
+      dialect: json['dialect'] == 'xiaomiMiMo'
+          ? AIProviderDialect.xiaomiMiMo
+          : AIProviderDialect.openAiCompatible,
+      thinkingEnabled: json['thinkingEnabled'] as bool? ?? true,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
@@ -118,6 +158,8 @@ class AIServiceProviderConfig {
       'textModel': textModel,
       'visionModel': visionModel,
       'audioModel': audioModel,
+      'dialect': dialect.name,
+      'thinkingEnabled': thinkingEnabled,
       'createdAt': createdAt.toIso8601String(),
     };
   }

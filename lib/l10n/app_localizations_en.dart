@@ -9,6 +9,39 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get aiMiMoThinking => 'Deep thinking';
+
+  @override
+  String get aiReasoningTitle => 'Thinking process';
+
+  @override
+  String get aiMiMoModelsMissingKey => 'Enter an API Key to automatically load available models';
+
+  @override
+  String get aiMiMoModelsLoading => 'Loading available models…';
+
+  @override
+  String get aiMiMoModelsUnauthorized => 'Invalid API Key or insufficient permission; model list not refreshed';
+
+  @override
+  String get aiMiMoModelsFailed => 'Could not load models; saved models retained. Please retry';
+
+  @override
+  String get aiMiMoModelsEmpty => 'No models available for this account';
+
+  @override
+  String get aiMiMoModelsLoaded => 'Available account models loaded';
+
+  @override
+  String get aiMiMoModelsRefresh => 'Refresh models';
+
+  @override
+  String get aiMiMoModelUnavailable => 'Saved model unavailable; an available replacement was selected. Review before saving';
+
+  @override
+  String get aiMiMoModelsHint => 'Models are loaded from Xiaomi. Uses the pay-as-you-go API.';
+
+  @override
   String get agentActivityPreparing => 'Preparing your answer…';
 
   @override
@@ -160,7 +193,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiConsentTitle => 'Before enabling AI features';
 
   @override
-  String get aiConsentBody => 'AI features need to send related data to the third-party AI provider you configure:\n\n• Who it goes to: by default Zhipu GLM (open.bigmodel.cn, operated by Zhipu); if you configure another third-party AI service, it goes to the provider you entered.\n• What is sent: the content you actively use for recognition/chat — receipt images, voice recordings, text you type, plus the category names, account names and relevant transaction records needed to complete recognition/analysis.\n• Purpose: only for bill recognition, bookkeeping and chats you initiate; BeeCount itself does not collect or store this data.\n\nThe data is processed by that third-party provider under its own privacy policy. Enabling means you consent to the data sharing above.';
+  String get aiConsentBody => 'AI features need to send related data to the third-party AI provider you configure:\n\n• Who it goes to: Xiaomi MiMo by default for new installations (api.xiaomimimo.com, operated by Xiaomi; existing users retain their provider); if you configure another third-party AI service, it goes to the provider you entered.\n• What is sent: the content you actively use for recognition/chat — receipt images, voice recordings, text you type, plus the category names, account names and relevant transaction records needed to complete recognition/analysis.\n• Purpose: only for bill recognition, bookkeeping and chats you initiate; BeeCount itself does not collect or store this data.\n\nThe data is processed by that third-party provider under its own privacy policy. Enabling means you consent to the data sharing above.';
 
   @override
   String get aiConsentAgree => 'Agree & enable';

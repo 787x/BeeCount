@@ -7,6 +7,26 @@
 5 个调用渠道(对话/相册/相机/语音/自动截图/自动通知文本)共享同一套流水线。
 本文档帮你**3 分钟搞清楚一段代码应该改哪个文件**。
 
+### Xiaomi MiMo 内置服务商
+
+真正没有历史 AI 配置的新安装初始化 MiMo 和智谱，三种能力绑定 MiMo。
+旧 Provider、legacy 配置及缺失 binding 的升级兼容路径保留原选择；
+`AICapabilityBinding.defaultBinding` 仍是智谱兼容回退。
+
+`XiaomiMiMoProfile` 集中按量 API endpoint、Thinking payload、模型分类与
+ASR payload。服务商通过显式 `dialect` 选择协议，自定义 OpenAI-compatible
+配置不按 URL 或模型名称推断协议。模型设置使用 `/models` 和下拉选择；
+网络失败保留保存值，成功刷新会替换已下线的选择并提示用户确认。
+
+Thinking 设置作用于所有 MiMo generation 请求，ASR 和模型列表不使用它。
+AgentCore 通过独立 reasoning delta 传递正文，在单次 run 的工具历史中
+保留 `reasoning_content`；App 将展示用 reasoning 写入消息 metadata。
+最终回答、复制、模型长期会话正文及显式记忆不包含该展示元数据。
+
+协议参考：[模型列表](https://mimo.mi.com/docs/en-US/api/model/list-models)、
+[深度思考与 reasoning 回传](https://platform.xiaomimimo.com/docs/en-US/usage-guide/passing-back-reasoning_content)、
+[MiMo ASR](https://mimo.mi.com/docs/en-US/api/audio/Speech-Recognition)。
+
 ---
 
 ## 1. 三层架构
