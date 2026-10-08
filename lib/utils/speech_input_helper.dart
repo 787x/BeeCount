@@ -15,6 +15,7 @@ import '../ai/providers/ai_provider_config.dart';
 import '../widgets/ui/ui.dart';
 import '../styles/tokens.dart';
 import '../widgets/ai/android_speech_dialog.dart';
+import '../widgets/ai/ai_privacy_consent_dialog.dart';
 
 import '../services/ai/speech_recognition.dart';
 import '../ai/providers/ai_provider_factory.dart';
@@ -33,6 +34,8 @@ class SpeechInputHelper {
     _active = true;
     final l10n = AppLocalizations.of(context);
     try {
+      if (!await ensureAiPrivacyConsent(context, ref)) return null;
+      if (!context.mounted) return null;
       await ref.read(speechRecognitionSettingsProvider.notifier).loaded;
       await ref.read(voiceBillingSettingsProvider.notifier).ensureLoaded();
       final mode = ref.read(speechRecognitionSettingsProvider);

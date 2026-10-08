@@ -24,4 +24,15 @@ void main() {
     });
     expect(await AiPrivacyConsentStore.isConsented(), isFalse);
   });
+  test('version 1 must accept version 2 before it is consented again',
+      () async {
+    SharedPreferences.setMockInitialValues({AiPrivacyConsentStore.prefsKey: 1});
+    expect(kAiPrivacyConsentVersion, 2);
+    expect(await AiPrivacyConsentStore.readVersion(), 1);
+    expect(await AiPrivacyConsentStore.isConsented(), isFalse);
+    await AiPrivacyConsentStore.accept();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(AiPrivacyConsentStore.prefsKey), 2);
+    expect(await AiPrivacyConsentStore.isConsented(), isTrue);
+  });
 }

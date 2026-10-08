@@ -2,6 +2,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:io';
+import 'package:beecount/ai/privacy/ai_privacy_consent.dart';
 import 'package:flutter/services.dart';
 import 'package:record_platform_interface/record_platform_interface.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -91,6 +92,7 @@ void main() {
         audioModel: 'speech-model',
         createdAt: DateTime(2026));
     SharedPreferences.setMockInitialValues({
+      AiPrivacyConsentStore.prefsKey: kAiPrivacyConsentVersion,
       AIConstants.keyAiBillExtractionEnabled: true,
       'ai_providers_v2': jsonEncode([textOnly.toJson()]),
       'ai_capability_binding_v2': jsonEncode(
@@ -248,5 +250,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(recorder.starts, 0);
     expect(bookkeeper.calls, isEmpty);
+  });
+  testWidgets('version 1 user cannot start speech before accepting version 2',
+      (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(AiPrivacyConsentStore.prefsKey, 1);
+    final original = RecordPlatform.instance;
+    final recorder = _Recorder();
+    RecordPlatform.instance = recorder;
+    const permission =
+        MethodChannel('flutter.baseflow.com/permissions/methods');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    var permissionCalls = 0;
+    messenger.setMockMethodCallHandler(permission, (_) async {
+      permissionCalls++;
+      return 1;
+    });
+    addTearDown(() {
+      RecordPlatform.instance = original;
+      messenger.setMockMethodCallHandler(permission, null);
+    });
+    final bookkeeper = _Bookkeeper();
+    await tester.pumpWidget(host(bookkeeper, SpeechInputHelper.recognize));
+    await tester.tap(find.text('record'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(await AiPrivacyConsentStore.isConsented(), isFalse);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(await AiPrivacyConsentStore.readVersion(), 1);
+    expect(permissionCalls, 0);
+    expect(recorder.starts, 0);
+    expect(bookkeeper.sttCalls, 0);
+    expect(bookkeeper.calls, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
   });
 }
