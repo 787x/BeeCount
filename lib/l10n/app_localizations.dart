@@ -98,6 +98,72 @@ abstract class AppLocalizations {
     Locale('zh', 'TW')
   ];
 
+  /// No description provided for @aiMiMoThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep thinking'**
+  String get aiMiMoThinking;
+
+  /// No description provided for @aiReasoningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking process'**
+  String get aiReasoningTitle;
+
+  /// No description provided for @aiMiMoModelsMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an API Key to automatically load available models'**
+  String get aiMiMoModelsMissingKey;
+
+  /// No description provided for @aiMiMoModelsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading available models…'**
+  String get aiMiMoModelsLoading;
+
+  /// No description provided for @aiMiMoModelsUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid API Key or insufficient permission; model list not refreshed'**
+  String get aiMiMoModelsUnauthorized;
+
+  /// No description provided for @aiMiMoModelsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load models; saved models retained. Please retry'**
+  String get aiMiMoModelsFailed;
+
+  /// No description provided for @aiMiMoModelsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No models available for this account'**
+  String get aiMiMoModelsEmpty;
+
+  /// No description provided for @aiMiMoModelsLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Available account models loaded'**
+  String get aiMiMoModelsLoaded;
+
+  /// No description provided for @aiMiMoModelsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh models'**
+  String get aiMiMoModelsRefresh;
+
+  /// No description provided for @aiMiMoModelUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved model unavailable; an available replacement was selected. Review before saving'**
+  String get aiMiMoModelUnavailable;
+
+  /// No description provided for @aiMiMoModelsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Models are loaded from Xiaomi. Uses the pay-as-you-go API.'**
+  String get aiMiMoModelsHint;
+
   /// No description provided for @agentActivityPreparing.
   ///
   /// In en, this message translates to:
@@ -359,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiConsentBody.
   ///
   /// In en, this message translates to:
-  /// **'AI features need to send related data to the third-party AI provider you configure:\n\n• Who it goes to: by default Zhipu GLM (open.bigmodel.cn, operated by Zhipu); if you configure another third-party AI service, it goes to the provider you entered.\n• What is sent: the content you actively use for recognition/chat — receipt images, voice recordings, text you type, plus the category names, account names and relevant transaction records needed to complete recognition/analysis.\n• Purpose: only for bill recognition, bookkeeping and chats you initiate; BeeCount itself does not collect or store this data.\n\nThe data is processed by that third-party provider under its own privacy policy. Enabling means you consent to the data sharing above.'**
+  /// **'AI features need to send related data to the third-party AI provider you configure:\n\n• Who it goes to: Xiaomi MiMo by default for new installations (api.xiaomimimo.com, operated by Xiaomi; existing users retain their provider); if you configure another third-party AI service, it goes to the provider you entered.\n• What is sent: the content you actively use for recognition/chat — receipt images, voice recordings, text you type, plus the category names, account names and relevant transaction records needed to complete recognition/analysis.\n• Purpose: only for bill recognition, bookkeeping and chats you initiate; BeeCount itself does not collect or store this data.\n\nThe data is processed by that third-party provider under its own privacy policy. Enabling means you consent to the data sharing above.'**
   String get aiConsentBody;
 
   /// No description provided for @aiConsentAgree.

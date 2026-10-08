@@ -4,6 +4,8 @@ import 'dart:ui';
 ///
 /// 统一管理官网链接，方便未来域名变更
 class WebsiteUrls {
+  /// Xiaomi MiMo 按量 API 控制台。
+  static const xiaomiMiMoApiKeys = 'https://platform.xiaomimimo.com/';
   WebsiteUrls._();
 
   /// 官网基础域名

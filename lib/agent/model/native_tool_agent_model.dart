@@ -17,6 +17,7 @@ export 'package:agentcore/agentcore.dart'
         AgentNativeProtocolException,
         AgentNativeStreamEvent,
         AgentNativeTextDelta,
+        AgentNativeReasoningDelta,
         AgentNativeToolCall,
         AgentNativeToolCallsResponse,
         AgentNativeToolDefinition,

@@ -9,6 +9,7 @@ import 'package:flutter_ai_kit_openai/flutter_ai_kit_openai.dart'
 import 'package:flutter_ai_kit_zhipu/flutter_ai_kit_zhipu.dart';
 
 import 'ai_provider_config.dart';
+import 'xiaomi_mimo_profile.dart';
 import 'ai_provider_manager.dart';
 import '../../services/system/logger_service.dart';
 
@@ -19,20 +20,25 @@ import '../../services/system/logger_service.dart';
 class AIProviderFactory {
   AIProviderFactory._();
 
-  static Dio? _dio;
+  static Map<String, Object?> _generationParameters(
+          AIServiceProviderConfig config,
+          {double? temperature}) =>
+      config.isXiaomiMiMo
+          ? XiaomiMiMoProfile.generationParameters(config.thinkingEnabled,
+              temperature: temperature)
+          : {if (temperature != null) 'temperature': temperature};
 
   /// 获取/创建 Dio 实例
   static Dio _getDio(AIServiceProviderConfig config) {
-    _dio ??= Dio(BaseOptions(
+    return Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
+      baseUrl: config.isXiaomiMiMo ? XiaomiMiMoProfile.baseUrl : config.baseUrl,
+      headers: {
+        'Authorization': 'Bearer ${config.apiKey}',
+        'Content-Type': 'application/json',
+      },
     ));
-    _dio!.options.baseUrl = config.baseUrl;
-    _dio!.options.headers = {
-      'Authorization': 'Bearer ${config.apiKey}',
-      'Content-Type': 'application/json',
-    };
-    return _dio!;
   }
 
   // ============================================================
@@ -68,7 +74,7 @@ class AIProviderFactory {
 
     logger.debug(tag, '发起文本对话 (${config.name}, 模型: ${config.textModel})');
 
-    if (config.isBuiltIn) {
+    if (config.isZhipu) {
       return _chatZhipu(config, prompt, systemPrompt, temperature);
     } else {
       return _chatOpenAI(config, prompt, systemPrompt, temperature);
@@ -154,7 +160,7 @@ class AIProviderFactory {
     final payload = <String, Object?>{
       'model': config.textModel,
       'messages': messages,
-      'temperature': 0.1,
+      ..._generationParameters(config, temperature: 0.1),
       'stream': stream,
     };
     // Keep an explicit no-tool choice during finalization. DeepSeek-compatible
@@ -162,7 +168,7 @@ class AIProviderFactory {
     if (tools.isNotEmpty) {
       payload['tools'] = tools;
       payload['tool_choice'] = 'auto';
-    } else {
+    } else if (!config.isXiaomiMiMo) {
       payload['tool_choice'] = 'none';
     }
     return payload;
@@ -294,6 +300,13 @@ class AIProviderFactory {
     final delta = <String, Object?>{};
     if (message['content'] case final String content when content.isNotEmpty) {
       delta['content'] = content;
+    }
+    final primaryReasoning = message['reasoning_content'];
+    final reasoning = primaryReasoning is String && primaryReasoning.isNotEmpty
+        ? primaryReasoning
+        : message['reasoning'];
+    if (reasoning is String && reasoning.isNotEmpty) {
+      delta['reasoning_content'] = reasoning;
     }
     if (message['tool_calls'] case final List calls) {
       delta['tool_calls'] = [
@@ -452,7 +465,7 @@ class AIProviderFactory {
 
     logger.debug(tag, '发起图片理解 (${config.name}, 模型: ${config.visionModel})');
 
-    if (config.isBuiltIn) {
+    if (config.isZhipu) {
       return _visionZhipu(config, image, prompt);
     } else {
       return _visionOpenAI(config, image, prompt);
@@ -484,7 +497,7 @@ class AIProviderFactory {
 
     logger.debug(tag, '发起语音转文字 (${config.name}, 模型: ${config.audioModel})');
 
-    if (config.isBuiltIn) {
+    if (config.isZhipu) {
       return _speechToTextZhipu(config, audio);
     } else {
       return _speechToTextOpenAI(config, audio);
@@ -536,7 +549,7 @@ class AIProviderFactory {
 
     try {
       String response;
-      if (config.isBuiltIn) {
+      if (config.isZhipu) {
         response = await _chatZhipu(config, 'hi', null, 0.7);
       } else {
         response = await _chatOpenAI(
@@ -630,30 +643,32 @@ class AIProviderFactory {
       'model': config.textModel,
       'messages': messages,
       'tools': tools,
-      'temperature': 0,
+      ..._generationParameters(config, temperature: 0),
       'stream': false,
     };
     var forced = AgentCapabilitySupport.unknown;
     Map<String, dynamic>? response;
     Object? forcedError;
-    try {
-      response = await _postToolCompletion(
-        dio,
-        {
-          ...base,
-          'tool_choice': {
-            'type': 'function',
-            'function': {'name': probeName},
+    if (!config.isXiaomiMiMo) {
+      try {
+        response = await _postToolCompletion(
+          dio,
+          {
+            ...base,
+            'tool_choice': {
+              'type': 'function',
+              'function': {'name': probeName},
+            },
           },
-        },
-        retryWithoutToolChoice: false,
-      );
-      forced = _hasToolCall(response, probeName)
-          ? AgentCapabilitySupport.supported
-          : AgentCapabilitySupport.unknown;
-    } on Object catch (error) {
-      forcedError = error;
-      forced = AgentCapabilitySupport.unsupported;
+          retryWithoutToolChoice: false,
+        );
+        forced = _hasToolCall(response, probeName)
+            ? AgentCapabilitySupport.supported
+            : AgentCapabilitySupport.unknown;
+      } on Object catch (error) {
+        forcedError = error;
+        forced = AgentCapabilitySupport.unsupported;
+      }
     }
 
     if (response == null || !_hasToolCall(response, probeName)) {
@@ -769,6 +784,7 @@ class AIProviderFactory {
   static Future<(bool success, String? error)> validateVisionCapability(
     AIServiceProviderConfig config, {
     String? logTag,
+    @visibleForTesting Dio? client,
   }) async {
     final tag = logTag ?? 'AIFactory';
     logger.info(tag, '验证视觉能力: ${config.name}');
@@ -792,10 +808,11 @@ class AIProviderFactory {
 
       try {
         String response;
-        if (config.isBuiltIn) {
+        if (config.isZhipu) {
           response = await _visionZhipu(config, testImage, '描述这张图片');
         } else {
-          response = await _visionOpenAI(config, testImage, '描述这张图片');
+          response =
+              await _visionOpenAI(config, testImage, '描述这张图片', client: client);
         }
 
         if (response.isNotEmpty) {
@@ -823,6 +840,7 @@ class AIProviderFactory {
   static Future<(bool success, String? error)> validateSpeechCapability(
     AIServiceProviderConfig config, {
     String? logTag,
+    @visibleForTesting Dio? client,
   }) async {
     final tag = logTag ?? 'AIFactory';
     logger.info(tag, '验证语音能力: ${config.name}');
@@ -845,10 +863,10 @@ class AIProviderFactory {
       await testAudio.writeAsBytes(testAudioBytes);
 
       try {
-        if (config.isBuiltIn) {
+        if (config.isZhipu) {
           await _speechToTextZhipu(config, testAudio);
         } else {
-          await _speechToTextOpenAI(config, testAudio);
+          await _speechToTextOpenAI(config, testAudio, client: client);
         }
 
         // 静音音频返回空字符串也算成功
@@ -1017,7 +1035,7 @@ class AIProviderFactory {
   // ============================================================
 
   // 结构上必须保留的键;其余键(temperature 等)被上游拒绝时可摘掉重发。
-  static const _requiredChatKeys = {'model', 'messages', 'stream'};
+  static const _requiredChatKeys = {'model', 'messages', 'stream', 'thinking'};
   static const _maxParamStrips = 3;
 
   /// 上游因「参数不合法」报 4xx 时,返回它点名的那个可丢键(候选只来自我们发出去的键)。
@@ -1087,7 +1105,7 @@ class AIProviderFactory {
       final response = await _postChatCompletions(dio, {
         'model': config.textModel,
         'messages': messages,
-        'temperature': temperature,
+        ..._generationParameters(config, temperature: temperature),
       });
 
       return _extractChatContent(response, capability: '文本');
@@ -1097,11 +1115,9 @@ class AIProviderFactory {
   }
 
   static Future<String> _visionOpenAI(
-    AIServiceProviderConfig config,
-    File image,
-    String prompt,
-  ) async {
-    final dio = _getDio(config);
+      AIServiceProviderConfig config, File image, String prompt,
+      {Dio? client}) async {
+    final dio = client ?? _getDio(config);
 
     final imageBytes = await image.readAsBytes();
     final base64Image = base64Encode(imageBytes);
@@ -1113,6 +1129,7 @@ class AIProviderFactory {
         '/chat/completions',
         data: {
           'model': config.visionModel,
+          ..._generationParameters(config),
           'messages': [
             {
               'role': 'user',
@@ -1136,11 +1153,29 @@ class AIProviderFactory {
     }
   }
 
+  @visibleForTesting
+  static Future<String> speechToTextForConfig(
+      AIServiceProviderConfig config, File audio,
+      {Dio? client}) {
+    if (config.isZhipu) return _speechToTextZhipu(config, audio);
+    return _speechToTextOpenAI(config, audio, client: client);
+  }
+
   static Future<String> _speechToTextOpenAI(
-    AIServiceProviderConfig config,
-    File audio,
-  ) async {
-    final dio = _getDio(config);
+      AIServiceProviderConfig config, File audio,
+      {Dio? client}) async {
+    final dio = client ?? _getDio(config);
+    if (config.isXiaomiMiMo) {
+      try {
+        final response = await dio.post<dynamic>('/chat/completions',
+            data: await XiaomiMiMoProfile.asrPayload(config.audioModel, audio));
+        return _extractChatContent(response, capability: '语音').trim();
+      } on XiaomiMiMoAudioTooLargeException catch (e) {
+        throw AIException(e.toString());
+      } on DioException catch (e) {
+        throw AIException(_extractDioError(e));
+      }
+    }
 
     logger.debug('AIFactory', '请求: ${config.baseUrl}/audio/transcriptions');
 

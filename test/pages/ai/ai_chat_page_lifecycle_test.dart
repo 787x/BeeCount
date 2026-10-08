@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:agentcore/agentcore.dart' as core;
 import 'package:beecount/models/assistant_follow_up_metadata.dart';
 import 'package:beecount/models/assistant_execution_metadata.dart';
+import 'package:beecount/models/assistant_reasoning_metadata.dart';
 import 'package:beecount/ai/core/ai_extraction_engine.dart';
+import 'package:beecount/ai/providers/ai_provider_config.dart';
 import 'package:beecount/ai/core/bill_info.dart';
 import 'package:beecount/agent/memory/local_agent_memory_repository.dart';
 import 'package:beecount/agent/permission/shared_preferences_agent_tool_permission_store.dart';
@@ -46,6 +48,10 @@ void main() {
       // This suite tests chat lifecycle, not legacy provider migration (which
       // schedules persistence/log timers independently of the disposed page).
       'ai_capability_binding_v2': '{}',
+      'ai_providers_v2': jsonEncode([
+        AIServiceProviderConfig.xiaomiDefault.toJson(),
+        AIServiceProviderConfig.zhipuDefault.toJson(),
+      ]),
     });
     database = BeeDatabase.forTesting(NativeDatabase.memory());
     repository = LocalRepository(database);
@@ -95,6 +101,69 @@ void main() {
       ),
     );
   }
+
+  testWidgets('reasoning 流式显示、完整保存并默认折叠，复制仅包含最终正文', (tester) async {
+    await repository.createLedger(name: '当前账本');
+    String? copied;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') {
+        copied = (call.arguments as Map)['text'] as String;
+      }
+      return null;
+    });
+    addTearDown(() => TestDefaultBinaryMessengerBinding
+        .instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+    final model = _ReasoningModel();
+    await tester.pumpWidget(host(model: model));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '你好');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await _pumpUntil(tester, () => model.request != null);
+    model.request!.nativeStreamSink
+        ?.call(const core.AgentNativeReasoningDelta('第一段思考'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('思考过程'), findsOneWidget);
+    await tester.tap(find.text('思考过程'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('第一段思考'), findsOneWidget);
+    model.request!.nativeStreamSink
+        ?.call(const core.AgentNativeReasoningDelta('持续增长'));
+    await tester.pump();
+    expect(find.text('第一段思考持续增长'), findsOneWidget);
+    model.request!.nativeStreamSink?.call(const core.AgentNativeModelActivity(
+        core.AgentNativeModelPhase.awaitingResponse));
+    model.request!.nativeStreamSink
+        ?.call(const core.AgentNativeReasoningDelta('第二轮思考'));
+    model.answer.complete(const core.AgentTurn.finalText('最终回答'));
+    await tester.runAsync(() => repository
+        .watchMessages(1)
+        .firstWhere((rows) => rows.any((row) => row.role == 'assistant')));
+    await tester.pumpAndSettle();
+    final rows = await database.select(database.messages).get();
+    final answer = rows.singleWhere((e) => e.role == 'assistant');
+    expect(answer.content, '最终回答');
+    expect(AssistantReasoningMetadata.decode(answer.metadata),
+        '第一段思考持续增长\n\n第二轮思考');
+    expect(find.textContaining('第一段思考'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpWidget(host(model: model));
+    await tester.pumpAndSettle();
+    expect(find.text('思考过程'), findsOneWidget);
+    expect(find.textContaining('第一段思考'), findsNothing);
+    await tester.tap(find.byKey(ValueKey('agent-answer-copy-${answer.id}')));
+    await tester.pump();
+    expect(copied, '最终回答');
+    await tester.tap(find.text('思考过程'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('第一段思考持续增长\n\n第二轮思考'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('离开 AI 对话页不会在 dispose 后读取 ref', (tester) async {
     await tester.pumpWidget(host());
@@ -436,6 +505,9 @@ void main() {
         find.byWidgetPredicate(
             (widget) => widget is AgentMarkdownText && widget.data == '本月支出'),
         findsOneWidget);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('agent-activity-toggle')));
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.tap(find.byKey(const ValueKey('agent-activity-toggle')));
     await tester.pump();
     expect(find.text('收支概览'), findsNothing);
@@ -459,6 +531,9 @@ void main() {
     expect(messages.single.content, '本月支出0元。');
     expect(AssistantExecutionMetadata.decode(messages.single.metadata),
         hasLength(1));
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('agent-activity-toggle')));
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.tap(find.byKey(const ValueKey('agent-activity-toggle')));
     await tester.pumpAndSettle();
     expect(find.text('收支概览'), findsOneWidget);
@@ -597,6 +672,9 @@ void main() {
     expect(find.text('收支概览'), findsNothing);
     await tester
         .ensureVisible(find.byKey(const ValueKey('agent-activity-toggle')));
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('agent-activity-toggle')));
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.tap(find.byKey(const ValueKey('agent-activity-toggle')));
     await tester.pumpAndSettle();
     expect(find.text('已返回 2 笔交易'), findsOneWidget);
@@ -779,5 +857,15 @@ final class _CapturingModel implements core.AgentModel {
   Future<core.AgentTurn> nextTurn(core.AgentRequest value) async {
     request = value;
     return const core.AgentTurn.finalText('未执行查询');
+  }
+}
+
+final class _ReasoningModel implements core.AgentModel {
+  core.AgentRequest? request;
+  final answer = Completer<core.AgentTurn>();
+  @override
+  Future<core.AgentTurn> nextTurn(core.AgentRequest value) {
+    request = value;
+    return answer.future;
   }
 }
