@@ -34,7 +34,9 @@ BeeCount 是本地优先的记账应用。实现和修改时优先保证：
 
 AI 记账主链路保持现有依赖方向：
 
-`channel / UI → AiBookkeeper → AiExtractionEngine → provider`
+```
+channel / UI → AiBookkeeper → AiExtractionEngine → provider
+```
 
 `AiBookkeeper` 是记账渠道的统一应用层入口。不要让新的图片、语音或 AI 渠道各自复制落库逻辑。
 
@@ -75,15 +77,32 @@ Agent 写工具必须继续经过现有 authorization / policy 机制。任何�
 
 已有自定义 AI 服务商默认遵循当前 OpenAI-compatible 行为。
 
+一等内置服务商与自定义 OpenAI-compatible 服务商可以拥有不同的配置体验：
+
+- 官方固定 Base URL 的内置服务商，不要求用户手工输入 URL；
+- 服务商存在官方 model-list API 时，优先动态读取当前账号真正可用的模型，而不是要求用户手工输入模型 ID；
+- Provider-specific 的模型能力分类应留在 Provider 层，不把模型命名规则泄漏到通用 Agent 或业务层；
+- 自定义 OpenAI-compatible Provider 继续保留手工 Base URL / 模型配置能力。
+
 增加某个服务商的特殊协议时：
 
 - 优先使用显式、向后兼容的配置表示协议差异；
 - 不依赖显示名称判断服务商；
-- 不根据模型名前缀猜协议；
-- 不根据 Base URL 字符串做隐藏行为，除非该判断本身就是明确的兼容 requirement；
+- 不在通用层根据模型名前缀猜协议；
+- 不根据 Base URL 字符串暗中改变协议语义；
+- 固定 endpoint、model discovery、模型能力规则可以存在于对应的一等 Provider 实现中；
 - 不改变其它 OpenAI-compatible Provider 的现有 payload 和 fallback 行为。
 
 Provider 配置目前会 JSON 序列化到 SharedPreferences，并参与配置导入/导出及 AI 配置同步。新增配置字段必须保证旧 JSON 缺少该字段时仍能正常加载，并保证新字段能 round-trip。
+
+改变“新安装默认服务商”时：
+
+- 只影响没有任何历史 AI 配置的真正新安装；
+- 不得静默修改升级用户已有 capability binding；
+- 不得覆盖已有 API Key、模型选择或自定义 Provider；
+- legacy 配置迁移仍应保持原用户选择。
+
+如果官方 Provider 的某类凭证或订阅明确限制使用场景，不要在不符合该场景的 BeeCount 功能中把它宣传或暴露为受支持配置，除非任务明确提供了允许该用途的依据。
 
 不要因为 Provider 配置增加字段而创建 Drift migration。
 
@@ -104,6 +123,13 @@ Reasoning 与最终回答必须保持逻辑分离：
 
 如果模型协议要求 reasoning 在同一次 Agent run 的后续模型回合中回传，应在协议会话状态中保真保存；不要为了满足单次运行协议要求重新设计 BeeCount 的长期会话存储。
 
+Provider 支持 Thinking 时：
+
+- 用户可配置的 Thinking 开关应有明确持久化语义；
+- Provider 的默认行为应由该 Provider 自己定义；
+- 不要通过是否出现 reasoning 文本来反推用户配置；
+- Thinking 开关与 reasoning UI 展示是两个概念：没有 reasoning 时不显示空面板，有 reasoning 时 UI 可以按产品设计折叠展示。
+
 ## Privacy and Logging
 
 禁止新增日志输出：
@@ -116,6 +142,8 @@ Reasoning 与最终回答必须保持逻辑分离：
 - 无必要的完整用户账务数据。
 
 错误日志应保留定位问题需要的状态、模型名、服务商、HTTP 状态码和安全的错误摘要。
+
+模型列表请求同样不得记录用户 API Key 或完整 Authorization header。
 
 ## UI and Localization
 
@@ -130,6 +158,8 @@ Reasoning 与最终回答必须保持逻辑分离：
 
 大型 UI 逻辑优先拆成职责明确的小 Widget，不继续无限扩大已经较大的页面文件。
 
+内置 Provider 若能自动获取模型，应优先使用下拉选择、加载状态和重试，而不是同时暴露一个容易配置错误的自由文本模型输入框。
+
 ## Compatibility
 
 除非任务明确要求：
@@ -137,10 +167,11 @@ Reasoning 与最终回答必须保持逻辑分离：
 - 不升级 Flutter / Dart；
 - 不升级无关依赖；
 - 不改变数据库 schema；
-- 不改变现有配置 key；
 - 不删除旧配置兼容读取；
 - 不修改其它 AI Provider 的请求语义；
 - 不引入新的网络服务或云依赖。
+
+允许为向后兼容增加新的可选配置字段，但不得破坏旧 JSON。
 
 可逆且符合现有模式的实现细节由实现者自行决定。
 
@@ -154,7 +185,7 @@ Reasoning 与最终回答必须保持逻辑分离：
 
 AI / Agent 相关修改优先覆盖当前 AI CI 对应的离线测试范围，包括：
 
-```bash
+```
 cd packages/agentcore
 dart pub get
 dart analyze
@@ -163,20 +194,29 @@ dart test
 
 以及从仓库根目录运行与改动直接相关的 Flutter 测试。较大 AI 改动应尽可能运行当前 AI Eval workflow 使用的离线回归范围：
 
-```bash
+```
 flutter test --no-pub test/agent test/ai/providers test/services/ai test/widgets/ai test/pages/ai test/ai_eval/assertions_test.dart
 dart run tool/ai_eval.dart
 ```
 
 如果改动了用户文案：
 
-```bash
+```
 flutter gen-l10n
 ```
 
 如果没有修改 Drift schema 或其它 codegen 输入，不要无意义运行 build_runner。
 
 不要依赖真实第三方 API Key 作为主要测试 oracle。Provider 协议行为应尽可能通过 mock/fake HTTP 或固定 SSE chunk 做离线测试。
+
+涉及动态模型列表时，离线测试至少覆盖：
+
+- 正常返回模型；
+- 空模型列表；
+- 401/403；
+- 网络失败；
+- 已保存模型已下线；
+- API 返回新模型 ID。
 
 ## Code Quality
 
@@ -191,11 +231,15 @@ flutter gen-l10n
 
 不要顺手重构与当前任务无关的代码。
 
+Provider-specific 行为可以集中在一个小的 helper / profile / adapter 中；不要因为存在两个服务商就引入 plugin registry、dependency graph 或复杂 service locator。
+
 ## Git and PR
 
 提交信息和 PR 标题遵循仓库现有 Conventional Commits 规范，并使用中文，例如：
 
-`feat(ai): 适配 Xiaomi MiMo 思考与语音协议`
+```
+feat(ai): 将 Xiaomi MiMo 设为默认 AI 服务商
+```
 
 一个 PR 解决一个清晰产品能力。必要的协议、UI 和测试可以放在同一个 PR 中；不要仅因为修改横跨多个层级就人为拆成多个互相不能独立工作的 PR。
 
