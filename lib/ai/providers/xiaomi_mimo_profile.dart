@@ -10,6 +10,16 @@ abstract final class XiaomiMiMoProfile {
   static const generationModel = 'mimo-v2.6-flash';
   static const asrModel = 'mimo-v2.5-asr';
 
+  /// Base64 音频上限为 10 MB（十进制字节数，不含 data URL 前缀）。
+  static const maxAsrBase64Bytes = 10 * 1000 * 1000;
+
+  /// 编码前按包含 padding 的 Base64 长度校验，避免为大小检查分配字符串。
+  static void validateAsrSize(int rawBytes) {
+    if (((rawBytes + 2) ~/ 3) * 4 > maxAsrBase64Bytes) {
+      throw const XiaomiMiMoAudioTooLargeException();
+    }
+  }
+
   static Map<String, Object?> generationParameters(bool thinkingEnabled,
           {double? temperature}) =>
       {
@@ -52,6 +62,10 @@ abstract final class XiaomiMiMoProfile {
       'mp3' => 'audio/mpeg',
       _ => throw const FormatException('MiMo ASR supports WAV / MP3'),
     };
+    validateAsrSize(await audio.length());
+    final bytes = await audio.readAsBytes();
+    // 文件可能在 length 与读取之间增长；编码前再次验证实际读取的字节。
+    validateAsrSize(bytes.length);
     return {
       'model': model,
       'messages': [
@@ -61,8 +75,7 @@ abstract final class XiaomiMiMoProfile {
             {
               'type': 'input_audio',
               'input_audio': {
-                'data':
-                    'data:$mime;base64,${base64Encode(await audio.readAsBytes())}',
+                'data': 'data:$mime;base64,${base64Encode(bytes)}',
               }
             },
           ],
@@ -71,6 +84,13 @@ abstract final class XiaomiMiMoProfile {
       'asr_options': {'language': 'auto'},
     };
   }
+}
+
+final class XiaomiMiMoAudioTooLargeException implements Exception {
+  const XiaomiMiMoAudioTooLargeException();
+
+  @override
+  String toString() => '音频过长或过大，超过 MiMo ASR 10 MB 限制';
 }
 
 final class XiaomiMiMoModelLoadException implements Exception {

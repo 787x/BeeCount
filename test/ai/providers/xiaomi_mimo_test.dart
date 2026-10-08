@@ -332,6 +332,101 @@ void main() {
         .toList();
   });
 
+  test('ASR size guard uses padded Base64 length at the 10 MB boundary', () {
+    expect(XiaomiMiMoProfile.maxAsrBase64Bytes, 10000000);
+    for (final rawBytes in [0, 1, 2, 3, 7499997, 7499998, 7499999, 7500000]) {
+      expect(
+          () => XiaomiMiMoProfile.validateAsrSize(rawBytes), returnsNormally);
+    }
+    // One extra raw byte adds a padded quartet, exceeding 10 MB even though
+    // the original file is smaller than 10 MB.
+    for (final rawBytes in [7500001, 7500002, 7500003, 10000000]) {
+      expect(() => XiaomiMiMoProfile.validateAsrSize(rawBytes),
+          throwsA(isA<XiaomiMiMoAudioTooLargeException>()));
+    }
+  });
+
+  for (final extension in ['wav', 'mp3']) {
+    test('oversized $extension ASR fails locally without an HTTP request',
+        () async {
+      final directory = await Directory.systemTemp.createTemp('mimo-size-test');
+      addTearDown(() => directory.delete(recursive: true));
+      final audio = File('${directory.path}/audio.$extension');
+      final file = await audio.open(mode: FileMode.write);
+      try {
+        // File length tests the production guard without a large memory buffer.
+        await file.truncate(7500001);
+      } finally {
+        await file.close();
+      }
+      var requests = 0;
+      final dio = Dio()
+        ..httpClientAdapter = _Adapter((request) {
+          requests++;
+          return _json({});
+        });
+      await expectLater(
+          AIProviderFactory.speechToTextForConfig(xiaomi, audio, client: dio),
+          throwsA(isA<AIException>().having(
+              (e) => e.message, 'safe error', '音频过长或过大，超过 MiMo ASR 10 MB 限制')));
+      expect(requests, 0);
+    });
+  }
+
+  for (final scenario in [
+    'MiMo tools',
+    'MiMo finalization',
+    'generic finalization'
+  ]) {
+    test('$scenario preserves tool choice in streaming and fallback payloads',
+        () async {
+      final generic = scenario == 'generic finalization';
+      final withTools = scenario == 'MiMo tools';
+      final config = generic
+          ? xiaomi.copyWith(
+              isBuiltIn: false, dialect: AIProviderDialect.openAiCompatible)
+          : xiaomi;
+      var requests = 0;
+      final tools = <Map<String, dynamic>>[
+        if (withTools)
+          {
+            'type': 'function',
+            'function': {'name': 'probe'}
+          },
+      ];
+      final dio = Dio()
+        ..httpClientAdapter = _Adapter((request) {
+          requests++;
+          final payload = request.data as Map;
+          if (withTools) {
+            expect(payload['tools'], tools);
+            expect(payload['tool_choice'], 'auto');
+          } else {
+            expect(payload.containsKey('tools'), isFalse);
+            if (generic) {
+              expect(payload['tool_choice'], 'none');
+            } else {
+              expect(payload.containsKey('tool_choice'), isFalse);
+            }
+          }
+          if (payload['stream'] == true) {
+            return _json({'error': 'streaming unsupported'}, status: 400);
+          }
+          return _json({
+            'choices': [
+              {
+                'message': {'content': 'ok'}
+              }
+            ]
+          });
+        });
+      await AIProviderFactory.chatWithToolsStreamForConfig(
+              config: config, messages: [], tools: tools, client: dio)
+          .toList();
+      expect(requests, 2);
+    });
+  }
+
   test(
       'ASR uses WAV/MP3 chat payload and validation shares transport; generic uses Whisper',
       () async {

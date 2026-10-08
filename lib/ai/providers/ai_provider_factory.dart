@@ -168,7 +168,7 @@ class AIProviderFactory {
     if (tools.isNotEmpty) {
       payload['tools'] = tools;
       payload['tool_choice'] = 'auto';
-    } else {
+    } else if (!config.isXiaomiMiMo) {
       payload['tool_choice'] = 'none';
     }
     return payload;
@@ -1170,6 +1170,8 @@ class AIProviderFactory {
         final response = await dio.post<dynamic>('/chat/completions',
             data: await XiaomiMiMoProfile.asrPayload(config.audioModel, audio));
         return _extractChatContent(response, capability: '语音').trim();
+      } on XiaomiMiMoAudioTooLargeException catch (e) {
+        throw AIException(e.toString());
       } on DioException catch (e) {
         throw AIException(_extractDioError(e));
       }
