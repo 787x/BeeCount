@@ -39,6 +39,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiMiMoModelUnavailable => '저장된 모델을 사용할 수 없어 대체 모델을 선택했습니다. 저장 전에 확인하세요';
 
   @override
+  String get aiDeepSeekModelsHint => 'DeepSeek에서 모델을 가져오며 지원되는 입력 유형으로 필터링합니다.';
+
+  @override
   String get aiMiMoModelsHint => 'Xiaomi에서 모델을 가져옵니다. 종량제 API를 사용합니다.';
 
   @override

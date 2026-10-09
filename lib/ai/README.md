@@ -9,7 +9,7 @@
 
 ### Xiaomi MiMo 内置服务商
 
-真正没有历史 AI 配置的新安装初始化 MiMo 和智谱，三种能力绑定 MiMo。
+真正没有历史 AI 配置的新安装初始化 MiMo、智谱和 DeepSeek，三种能力绑定 MiMo。
 旧 Provider、legacy 配置及缺失 binding 的升级兼容路径保留原选择；
 `AICapabilityBinding.defaultBinding` 仍是智谱兼容回退。
 
@@ -26,6 +26,29 @@ AgentCore 通过独立 reasoning delta 传递正文，在单次 run 的工具历
 协议参考：[模型列表](https://mimo.mi.com/docs/en-US/api/model/list-models)、
 [深度思考与 reasoning 回传](https://platform.xiaomimimo.com/docs/en-US/usage-guide/passing-back-reasoning_content)、
 [MiMo ASR](https://mimo.mi.com/docs/en-US/api/audio/Speech-Recognition)。
+
+### DeepSeek 内置服务商
+
+`deepSeek` 是独立持久化 dialect，固定使用 `https://api.deepseek.com`。
+默认文字和视觉模型均为 `deepseek-flash`，不提供 ASR，也不改变默认绑定。
+升级只补入缺失的内置配置，保留历史配置、API Key 和能力绑定。
+`DeepSeekProfile` 从 `/models` 的 `input_modalities` 分别筛选 text / image；
+未声明 modality 的模型不会按名称猜测能力。获取失败保留已保存的选择。
+
+MiMo 与 DeepSeek 共用 Quick Billing / Assistant Thinking 开关及请求参数：
+启用时省略 temperature，不发送 reasoning_effort。DeepSeek 工具探测和运行轮
+使用 `auto`，最终轮省略 tools 并发送 `none`；MiMo 最终轮仍省略 tool_choice。
+reasoning 解析、多轮工具历史回传、单图与多图复用现有链路，不改变 AgentCore。
+云端语音可绑定 MiMo，识别文字再交给 DeepSeek；Android 本地/系统语音仍独立。
+
+协议参考：[Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/)、
+[Thinking 与工具历史回传](https://api-docs.deepseek.com/guides/thinking_mode/)、
+[模型列表](https://api-docs.deepseek.com/api/list-models)。
+
+实机集成测试必须使用独立 QA 包或专用空白设备。Flutter 3.27.3 的
+`flutter test -d` 在测试结束时会卸载目标应用，包括该包的数据和配置；
+不要对已有数据的同包测试版运行这个命令。现有安装的 UI 验证可使用
+ADB 操作；真实 API 协议验证只发送合成测试文字、图片和安全工具结果。
 
 ---
 

@@ -6,7 +6,7 @@ import 'package:agentcore/agentcore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/ui/ui.dart';
-import '../../widgets/ai/xiaomi_model_settings.dart';
+import '../../widgets/ai/provider_model_settings.dart';
 import '../../widgets/biz/section_card.dart';
 import '../../services/system/logger_service.dart';
 import '../../styles/tokens.dart';
@@ -14,6 +14,7 @@ import '../../utils/ui_scale_extensions.dart';
 import '../../providers/theme_providers.dart';
 import '../../ai/providers/ai_provider_config.dart';
 import '../../ai/providers/xiaomi_mimo_profile.dart';
+import '../../ai/providers/deepseek_profile.dart';
 import '../../ai/providers/ai_provider_manager.dart';
 import '../../ai/providers/ai_provider_factory.dart';
 import '../../ai/providers/ai_constants.dart';
@@ -353,12 +354,9 @@ class _AIProviderManagePageState extends ConsumerState<AIProviderManagePage> {
 /// AI 服务商编辑页面
 class AIProviderEditPage extends ConsumerStatefulWidget {
   final AIServiceProviderConfig? provider;
-  final XiaomiModelLoader modelLoader;
+  final ProviderModelLoader? modelLoader;
 
-  const AIProviderEditPage(
-      {super.key,
-      this.provider,
-      this.modelLoader = XiaomiMiMoProfile.discover});
+  const AIProviderEditPage({super.key, this.provider, this.modelLoader});
 
   @override
   ConsumerState<AIProviderEditPage> createState() => _AIProviderEditPageState();
@@ -377,7 +375,9 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
 
   bool _thinkingEnabled = true;
   bool _assistantThinkingEnabled = true;
-  bool get _isXiaomi => widget.provider?.isXiaomiMiMo ?? false;
+  bool get _isDeepSeek => widget.provider?.isDeepSeek ?? false;
+  bool get _supportsThinking =>
+      widget.provider?.supportsThinkingControl ?? false;
   bool _obscureApiKey = true;
   bool _saving = false;
 
@@ -503,8 +503,8 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // MiMo 的固定 endpoint 不显示在配置 UI。
-                        if (!_isXiaomi)
+                        // 内置 MiMo / DeepSeek 使用固定 endpoint。
+                        if (!_supportsThinking)
                           TextField(
                             controller: _baseUrlController,
                             enabled: !_isBuiltIn,
@@ -567,10 +567,12 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                           ),
                         ),
 
-                        if (_isXiaomi) ...[
+                        if (_supportsThinking) ...[
                           TextButton.icon(
                             onPressed: () => launchUrl(
-                                Uri.parse(WebsiteUrls.xiaomiMiMoApiKeys),
+                                Uri.parse(_isDeepSeek
+                                    ? WebsiteUrls.deepSeekApiKeys
+                                    : WebsiteUrls.xiaomiMiMoApiKeys),
                                 mode: LaunchMode.externalApplication),
                             icon: const Icon(Icons.open_in_new),
                             label: Text(l10n.aiCloudApiGetKey),
@@ -609,7 +611,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                         ],
 
                         // 内置服务商显示获取Key和教程链接
-                        if (_isBuiltIn && !_isXiaomi) ...[
+                        if (_isBuiltIn && !_supportsThinking) ...[
                           const SizedBox(height: 8),
                           Text(
                             l10n.aiCloudApiKeyHelper,
@@ -671,9 +673,11 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _isXiaomi
-                              ? l10n.aiMiMoModelsHint
-                              : l10n.aiProviderModelsHint,
+                          _isDeepSeek
+                              ? l10n.aiDeepSeekModelsHint
+                              : _supportsThinking
+                                  ? l10n.aiMiMoModelsHint
+                                  : l10n.aiProviderModelsHint,
                           style: TextStyle(
                             fontSize: 12,
                             color: BeeTokens.textTertiary(context),
@@ -681,20 +685,27 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        if (_isXiaomi)
-                          XiaomiModelSettings(
+                        if (_supportsThinking)
+                          ProviderModelSettings(
                             apiKey: _apiKeyController.text,
                             textModel: _textModelController.text,
                             visionModel: _visionModelController.text,
                             audioModel: _audioModelController.text,
-                            loadModels: widget.modelLoader,
+                            loadModels: widget.modelLoader ??
+                                (_isDeepSeek
+                                    ? DeepSeekProfile.discover
+                                    : XiaomiMiMoProfile.discover),
+                            preferredModel: _isDeepSeek
+                                ? DeepSeekProfile.generationModel
+                                : XiaomiMiMoProfile.generationModel,
+                            showSpeech: !_isDeepSeek,
                             onChanged: (text, vision, speech) => setState(() {
                               _textModelController.text = text;
                               _visionModelController.text = vision;
                               _audioModelController.text = speech;
                             }),
                           ),
-                        if (!_isXiaomi) ...[
+                        if (!_supportsThinking) ...[
                           // 文本模型
                           _buildModelInputWithTest(
                             controller: _textModelController,
@@ -1026,7 +1037,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
 
     final allSuccess = _textTestStatus == TestStatus.success &&
         _visionTestStatus == TestStatus.success &&
-        _speechTestStatus == TestStatus.success;
+        (_isDeepSeek || _speechTestStatus == TestStatus.success);
 
     final anyFailed = _textTestStatus == TestStatus.failed ||
         _visionTestStatus == TestStatus.failed ||
@@ -1086,7 +1097,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     await Future.wait([
       _testTextCapability(),
       _testVisionCapability(),
-      _testSpeechCapability(),
+      if (!_isDeepSeek) _testSpeechCapability(),
     ]);
   }
 

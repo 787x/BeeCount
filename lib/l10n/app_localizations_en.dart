@@ -39,6 +39,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiMiMoModelUnavailable => 'Saved model unavailable; an available replacement was selected. Review before saving';
 
   @override
+  String get aiDeepSeekModelsHint => 'Models are loaded from DeepSeek and filtered by supported input type.';
+
+  @override
   String get aiMiMoModelsHint => 'Models are loaded from Xiaomi. Uses the pay-as-you-go API.';
 
   @override

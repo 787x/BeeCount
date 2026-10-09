@@ -9,6 +9,7 @@
   "aiMiMoModelsLoaded": "已取得目前帳號可用模型",
   "aiMiMoModelsRefresh": "重新取得模型",
   "aiMiMoModelUnavailable": "已儲存的模型不可用，已選擇可用替代模型；請確認後儲存",
+  "aiDeepSeekModelsHint": "模型由 DeepSeek 官方介面取得，僅顯示支援對應輸入類型的模型。",
   "aiMiMoModelsHint": "模型由 Xiaomi 官方介面取得，支援按量 API。",
 
   "aiConsentTitle": "開啟 AI 功能前,請知悉",

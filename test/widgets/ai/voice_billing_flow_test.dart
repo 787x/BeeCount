@@ -83,20 +83,16 @@ class _Paths extends PathProviderPlatform {
 
 void main() {
   setUp(() {
-    final textOnly = AIServiceProviderConfig(
-        id: 'text',
-        name: 'text',
-        apiKey: 'fake-key',
-        baseUrl: 'https://example.invalid',
-        textModel: 'text-model',
-        audioModel: 'speech-model',
-        createdAt: DateTime(2026));
+    final textOnly =
+        AIServiceProviderConfig.deepSeekDefault.copyWith(apiKey: 'fake-key');
+    final speech =
+        AIServiceProviderConfig.xiaomiDefault.copyWith(apiKey: 'fake-key');
     SharedPreferences.setMockInitialValues({
       AiPrivacyConsentStore.prefsKey: kAiPrivacyConsentVersion,
       AIConstants.keyAiBillExtractionEnabled: true,
-      'ai_providers_v2': jsonEncode([textOnly.toJson()]),
+      'ai_providers_v2': jsonEncode([textOnly.toJson(), speech.toJson()]),
       'ai_capability_binding_v2': jsonEncode(
-          const AICapabilityBinding(textProviderId: 'text').toJson()),
+          const AICapabilityBinding(textProviderId: 'deepseek').toJson()),
     });
   });
   Widget host(_Bookkeeper bookkeeper, SpeechInputRequest input) =>
@@ -127,7 +123,7 @@ void main() {
                         child: const Text('record'))))),
       );
   testWidgets(
-      'local speech without speech provider reaches fromText with voice + AI tags',
+      'local speech with DeepSeek and no speech binding reaches fromText with voice + AI tags',
       (tester) async {
     final bookkeeper = _Bookkeeper();
     var inputCalls = 0;
@@ -162,14 +158,14 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
   testWidgets(
-      'cloud recording transcribes before entering the same fromText flow',
+      'MiMo cloud recording transcribes before entering the DeepSeek text flow',
       (tester) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('speech_recognition_mode', 'cloud');
     await prefs.setString(
         'ai_capability_binding_v2',
         jsonEncode(const AICapabilityBinding(
-                textProviderId: 'text', speechProviderId: 'text')
+                textProviderId: 'deepseek', speechProviderId: 'xiaomi_mimo')
             .toJson()));
     final originalRecorder = RecordPlatform.instance;
     final originalPaths = PathProviderPlatform.instance;
@@ -214,7 +210,7 @@ void main() {
     await prefs.setString(
         'ai_capability_binding_v2',
         jsonEncode(const AICapabilityBinding(
-                textProviderId: 'text', speechProviderId: 'text')
+                textProviderId: 'deepseek', speechProviderId: 'xiaomi_mimo')
             .toJson()));
     final original = RecordPlatform.instance;
     final recorder = _Recorder();

@@ -3,37 +3,43 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../ai/providers/xiaomi_mimo_profile.dart';
+import '../../ai/providers/deepseek_profile.dart';
+import '../../ai/providers/provider_models.dart';
 import '../../l10n/app_localizations.dart';
 
-typedef XiaomiModelLoader = Future<XiaomiMiMoModels> Function(String apiKey);
+typedef ProviderModelLoader = Future<ProviderModels> Function(String apiKey);
 
 /// Model discovery belongs to the provider editor, never to a test button.
-class XiaomiModelSettings extends StatefulWidget {
-  const XiaomiModelSettings(
+class ProviderModelSettings extends StatefulWidget {
+  const ProviderModelSettings(
       {super.key,
       required this.apiKey,
       required this.textModel,
       required this.visionModel,
       required this.audioModel,
       required this.onChanged,
-      this.loadModels = XiaomiMiMoProfile.discover});
+      this.loadModels = XiaomiMiMoProfile.discover,
+      this.preferredModel = XiaomiMiMoProfile.generationModel,
+      this.showSpeech = true});
 
+  final String preferredModel;
+  final bool showSpeech;
   final String apiKey;
   final String textModel;
   final String visionModel;
   final String audioModel;
   final void Function(String text, String vision, String speech) onChanged;
-  final XiaomiModelLoader loadModels;
+  final ProviderModelLoader loadModels;
 
   @override
-  State<XiaomiModelSettings> createState() => _XiaomiModelSettingsState();
+  State<ProviderModelSettings> createState() => _ProviderModelSettingsState();
 }
 
-class _XiaomiModelSettingsState extends State<XiaomiModelSettings> {
+class _ProviderModelSettingsState extends State<ProviderModelSettings> {
   Timer? _debounce;
   int _request = 0;
   bool _loading = false;
-  XiaomiMiMoModels? _models;
+  ProviderModels? _models;
   String? _error;
   bool _unauthorized = false;
   bool _unavailable = false;
@@ -45,7 +51,7 @@ class _XiaomiModelSettingsState extends State<XiaomiModelSettings> {
   }
 
   @override
-  void didUpdateWidget(XiaomiModelSettings oldWidget) {
+  void didUpdateWidget(ProviderModelSettings oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.apiKey != widget.apiKey) {
       _request++;
@@ -75,11 +81,11 @@ class _XiaomiModelSettingsState extends State<XiaomiModelSettings> {
     try {
       final models = await widget.loadModels(key);
       if (!mounted || request != _request) return;
-      final text = XiaomiMiMoModels.select(models.generation, widget.textModel,
-          XiaomiMiMoProfile.generationModel);
-      final vision = XiaomiMiMoModels.select(models.generation,
-          widget.visionModel, XiaomiMiMoProfile.generationModel);
-      final speech = XiaomiMiMoModels.select(
+      final text = ProviderModels.select(
+          models.text, widget.textModel, widget.preferredModel);
+      final vision = ProviderModels.select(
+          models.vision, widget.visionModel, widget.preferredModel);
+      final speech = ProviderModels.select(
           models.speech, widget.audioModel, XiaomiMiMoProfile.asrModel);
       setState(() {
         _models = models;
@@ -97,7 +103,8 @@ class _XiaomiModelSettingsState extends State<XiaomiModelSettings> {
         _models = null;
         _error = 'failed';
         _unauthorized =
-            error is XiaomiMiMoModelLoadException && error.unauthorized;
+            (error is XiaomiMiMoModelLoadException && error.unauthorized) ||
+                (error is ProviderModelLoadException && error.unauthorized);
       });
     }
   }
@@ -152,28 +159,31 @@ class _XiaomiModelSettingsState extends State<XiaomiModelSettings> {
             : l10n.aiMiMoModelsFailed),
       if (_unavailable && _models != null) Text(l10n.aiMiMoModelUnavailable),
       if (_models != null)
-        Text(_models!.ids.isEmpty
+        Text(_models!.text.isEmpty &&
+                _models!.vision.isEmpty &&
+                _models!.speech.isEmpty
             ? l10n.aiMiMoModelsEmpty
             : l10n.aiMiMoModelsLoaded),
       const SizedBox(height: 16),
       _dropdown(
           l10n.aiTextModelTitle,
           widget.textModel,
-          _models?.generation,
+          _models?.text,
           (value) =>
               widget.onChanged(value, widget.visionModel, widget.audioModel)),
       _dropdown(
           l10n.aiVisionModelTitle,
           widget.visionModel,
-          _models?.generation,
+          _models?.vision,
           (value) =>
               widget.onChanged(widget.textModel, value, widget.audioModel)),
-      _dropdown(
-          l10n.aiAudioModelTitle,
-          widget.audioModel,
-          _models?.speech,
-          (value) =>
-              widget.onChanged(widget.textModel, widget.visionModel, value)),
+      if (widget.showSpeech)
+        _dropdown(
+            l10n.aiAudioModelTitle,
+            widget.audioModel,
+            _models?.speech,
+            (value) =>
+                widget.onChanged(widget.textModel, widget.visionModel, value)),
       OutlinedButton.icon(
           onPressed: _loading || widget.apiKey.trim().isEmpty ? null : _load,
           icon: const Icon(Icons.refresh),

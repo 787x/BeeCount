@@ -39,6 +39,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiMiMoModelUnavailable => '已保存的模型不可用，已选择可用替代模型；请确认后保存';
 
   @override
+  String get aiDeepSeekModelsHint => '模型由 DeepSeek 官方接口获取，仅显示支持对应输入类型的模型。';
+
+  @override
   String get aiMiMoModelsHint => '模型由 Xiaomi 官方接口获取，支持按量 API。';
 
   @override
@@ -8430,6 +8433,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiMiMoModelUnavailable => '已儲存的模型不可用，已選擇可用替代模型；請確認後儲存';
+
+  @override
+  String get aiDeepSeekModelsHint => '模型由 DeepSeek 官方介面取得，僅顯示支援對應輸入類型的模型。';
 
   @override
   String get aiMiMoModelsHint => '模型由 Xiaomi 官方介面取得，支援按量 API。';

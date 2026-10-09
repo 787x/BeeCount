@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Saved model unavailable; an available replacement was selected. Review before saving'**
   String get aiMiMoModelUnavailable;
 
+  /// No description provided for @aiDeepSeekModelsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Models are loaded from DeepSeek and filtered by supported input type.'**
+  String get aiDeepSeekModelsHint;
+
   /// No description provided for @aiMiMoModelsHint.
   ///
   /// In en, this message translates to:
