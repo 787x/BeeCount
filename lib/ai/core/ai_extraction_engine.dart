@@ -85,7 +85,6 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
         ocrText: text,
       );
       logger.debug(_tag, '文本 prompt 长度: ${prompt.length}');
-      logger.debug(_tag, '完整 prompt:\n$prompt');
 
       final response = await AIProviderFactory.chat(
         prompt,
@@ -119,7 +118,6 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
         billGuard: billGuard,
       );
       logger.debug(_tag, '图片 prompt 长度: ${prompt.length}');
-      logger.debug(_tag, '完整 prompt:\n$prompt');
 
       final response = await AIProviderFactory.vision(
         image,
@@ -151,7 +149,6 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
         audio,
         logTag: _tag,
       );
-      logger.info(_tag, '识别结果: $recognizedText');
       if (recognizedText.trim().isEmpty) {
         logger.warning(_tag, '语音识别结果为空');
         return const AudioExtractionResult();
@@ -183,10 +180,10 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
       return text.trim().isEmpty ? null : text;
     } on AIException catch (e) {
       logger.warning(_tag, '语音转文字失败: ${e.message}');
-      return null;
+      rethrow;
     } catch (e, st) {
       logger.error(_tag, '语音转文字异常', e, st);
-      return null;
+      rethrow;
     }
   }
 }

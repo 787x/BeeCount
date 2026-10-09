@@ -22,9 +22,13 @@ class AIProviderFactory {
 
   static Map<String, Object?> _generationParameters(
           AIServiceProviderConfig config,
-          {double? temperature}) =>
+          {double? temperature,
+          bool assistant = false}) =>
       config.isXiaomiMiMo
-          ? XiaomiMiMoProfile.generationParameters(config.thinkingEnabled,
+          ? XiaomiMiMoProfile.generationParameters(
+              assistant
+                  ? config.assistantThinkingEnabled
+                  : config.thinkingEnabled,
               temperature: temperature)
           : {if (temperature != null) 'temperature': temperature};
 
@@ -105,7 +109,7 @@ class AIProviderFactory {
     );
   }
 
-  @visibleForTesting
+  /// Executes a tool round using the immutable provider snapshot for its run.
   static Stream<Map<String, dynamic>> chatWithToolsStreamForConfig({
     required AIServiceProviderConfig config,
     required List<Map<String, dynamic>> messages,
@@ -160,7 +164,7 @@ class AIProviderFactory {
     final payload = <String, Object?>{
       'model': config.textModel,
       'messages': messages,
-      ..._generationParameters(config, temperature: 0.1),
+      ..._generationParameters(config, temperature: 0.1, assistant: true),
       'stream': stream,
     };
     // Keep an explicit no-tool choice during finalization. DeepSeek-compatible
@@ -643,7 +647,7 @@ class AIProviderFactory {
       'model': config.textModel,
       'messages': messages,
       'tools': tools,
-      ..._generationParameters(config, temperature: 0),
+      ..._generationParameters(config, temperature: 0, assistant: true),
       'stream': false,
     };
     var forced = AgentCapabilitySupport.unknown;

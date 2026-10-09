@@ -193,7 +193,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiConsentTitle => 'AI 기능을 켜기 전에';
 
   @override
-  String get aiConsentBody => 'AI 기능을 사용하면 관련 데이터가 사용자가 설정한 제3자 AI 제공업체로 전송됩니다:\n\n• 전송 대상: 신규 설치의 기본값은 Xiaomi MiMo(api.xiaomimimo.com, Xiaomi 운영; 기존 사용자는 원래 제공업체 유지)이며, 다른 제3자 AI 서비스를 설정한 경우 해당 제공업체로 전송됩니다.\n• 전송 내용: 인식/대화를 위해 직접 사용하는 콘텐츠 — 영수증 이미지, 음성 녹음, 입력한 텍스트, 그리고 인식/분석을 완료하는 데 필요한 카테고리 이름, 계정 이름 및 관련 거래 기록.\n• 목적: 사용자가 직접 시작한 영수증 인식, 기록, 대화에만 사용되며 BeeCount 자체는 이 데이터를 수집하거나 저장하지 않습니다.\n\n해당 데이터는 제3자 제공업체의 자체 개인정보 처리방침에 따라 처리됩니다. 켜면 위와 같은 데이터 공유에 동의하는 것입니다.';
+  String get aiConsentBody => 'AI 기능 및 음성 입력은 다음 서비스를 통해 관련 데이터를 처리할 수 있습니다.\n\n• 텍스트 및 이미지 AI: 설정한 타사 AI 제공업체가 입력한 텍스트와 영수증 이미지, 기록이나 분석에 필요한 카테고리 이름, 계좌 이름 및 관련 거래 기록을 처리합니다. 신규 설치의 기본 제공업체는 Xiaomi MiMo(api.xiaomimimo.com, Xiaomi 운영)이며 기존 사용자의 선택은 유지됩니다.\n• Android 기기 내 음성: 원본 음성은 기기의 기기 내 인식 기능이 처리합니다.\n• Android 시스템 음성: 기기의 시스템 음성 인식 서비스를 사용하며 네트워크가 필요할 수 있습니다. 오디오 처리 방식은 해당 서비스에 따라 다르며 BeeCount에 설정한 AI 제공업체와 다를 수 있습니다.\n• 클라우드 AI 음성: 원본 녹음은 BeeCount에 현재 설정된 음성 제공업체로 전송되어 텍스트로 변환됩니다.\n\n인식된 텍스트: 음성 기록은 설정된 텍스트 AI 제공업체로 텍스트를 전송하여 기록을 처리합니다. AI Chat 마이크는 초안만 채우며, 사용자가 확인하고 메시지를 전송한 후에만 텍스트 AI 제공업체로 전송됩니다. 클라우드 음성 변환은 초안 생성 전에 오디오를 전송하며 시스템 인식도 그 전에 네트워크를 사용할 수 있습니다.\n\n데이터는 사용자가 시작한 인식, 기록 및 대화에만 사용됩니다. 각 서비스는 자체 개인정보 처리방침에 따라 데이터를 처리합니다. 활성화하면 위의 처리 및 공유에 동의하는 것입니다.';
 
   @override
   String get aiConsentAgree => '동의하고 켜기';
@@ -8268,4 +8268,85 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get transactionCopyUnavailable => 'This transaction cannot be copied. Check the ledger and your access.';
+
+  @override
+  String get speechRecognitionMode => '음성 인식 방식';
+
+  @override
+  String get speechModeAuto => '자동 (권장)';
+
+  @override
+  String get speechModeOnDevice => 'Android 기기 내 인식';
+
+  @override
+  String get speechModeSystem => 'Android 시스템 인식';
+
+  @override
+  String get speechModeCloud => '클라우드 AI';
+
+  @override
+  String get speechModeAutoDesc => '기기 내 인식, 시스템 인식 순으로 시도하고 둘 다 사용할 수 없으면 클라우드 AI를 사용합니다.';
+
+  @override
+  String get speechModeOnDeviceDesc => '지원되는 기기 내 인식만 사용합니다.';
+
+  @override
+  String get speechModeSystemDesc => '시스템 음성 서비스를 사용하며 네트워크가 필요할 수 있습니다.';
+
+  @override
+  String get speechModeCloudDesc => '설정된 음성 모델을 사용합니다.';
+
+  @override
+  String get speechOnDeviceUnavailable => '기기 내 인식을 지원하지 않습니다. 자동, 시스템 또는 클라우드 모드를 선택하세요.';
+
+  @override
+  String get speechSystemUnavailable => '사용 가능한 시스템 음성 서비스가 없습니다.';
+
+  @override
+  String get speechCloudUnavailable => '먼저 클라우드 음성 모델을 설정하세요.';
+
+  @override
+  String get speechUnavailable => '사용 가능한 음성 인식이 없습니다. 시스템 서비스를 확인하거나 클라우드 모델을 설정하세요.';
+
+  @override
+  String get speechBusy => '음성 서비스 사용 중입니다. 나중에 다시 시도하세요.';
+
+  @override
+  String get speechNetworkError => '음성 인식 연결 실패. 다시 시도하세요.';
+
+  @override
+  String get speechRecognitionFailed => '음성 인식 실패. 다시 시도하세요.';
+
+  @override
+  String get speechListening => '듣고 있습니다…';
+
+  @override
+  String get speechInputAction => '음성 입력';
+
+  @override
+  String get speechCloudSilenceHint => '무음 시간은 자동 클라우드 녹음에만 적용됩니다. 시스템은 발화 종료를 자체 판단합니다.';
+
+  @override
+  String get billingQuickActions => '빠른 기록';
+
+  @override
+  String get billingManualAction => '수동 기록';
+
+  @override
+  String get aiMiMoQuickThinking => '빠른 기록 깊은 사고';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 어시스턴트 깊은 사고';
+
+  @override
+  String get speechClientError => '시스템 음성 서비스를 시작할 수 없습니다. 기본 음성 서비스 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechLanguageUnsupported => '음성 서비스가 이 언어를 지원하지 않습니다. 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechLanguageUnavailable => '이 언어의 음성 인식 기능을 사용할 수 없습니다. 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechServerError => '시스템 음성 서비스를 일시적으로 사용할 수 없습니다. 나중에 다시 시도하세요.';
 }

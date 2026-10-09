@@ -1,6 +1,6 @@
 # Privacy Policy for BeeCount
 
-**Last updated**: 2026-06-25
+**Last updated**: 2026-10-08
 
 BeeCount ("we", "our", or "the app") is committed to protecting your privacy. This Privacy Policy explains how we handle your data when you use our application.
 
@@ -9,7 +9,7 @@ BeeCount ("we", "our", or "the app") is committed to protecting your privacy. Th
 - **BeeCount itself does NOT collect your data and does NOT operate any servers**
 - **We do NOT use any analytics or tracking**
 - **By default your data stays on your device; nothing is sent off-device**
-- **Only when you actively enable and configure AI features, the relevant data is sent to the third-party AI provider you choose**
+- **AI requests use your configured provider; voice input follows your recognition mode and may use the device system speech service**
 
 ---
 
@@ -54,7 +54,7 @@ BeeCount itself does not collect or sell your data, and we do not operate server
 
 - By default, no data leaves your device.
 - If you enable **cloud sync**, data goes only to the server YOU configure (your own Supabase / WebDAV).
-- If you enable **AI features**, the data needed for your request is sent to the third-party AI provider YOU configure (see Section 10).
+- If you use **AI features or voice input**, data processing follows the configured AI provider and the selected speech recognition mode, including the device system speech service when applicable (see Section 10).
 - We never sell your data, and we do not use it for advertising or analytics.
 
 ## 4. Permissions We Request
@@ -69,7 +69,11 @@ The app requests the following Android permissions:
 ### Internet Permission (INTERNET)
 - **Purpose**: To sync data with your own cloud service (if configured)
 - **Optional**: The app works fully offline without this permission
-- **Scope**: Only connects to servers YOU configure (Supabase/WebDAV)
+- **Scope**: Configured cloud/AI services and, when selected, the Android system speech service.
+
+### Microphone Permission (RECORD_AUDIO)
+- **Purpose**: Voice bookkeeping and AI Chat voice input, only when requested
+- **Processing**: On-device, system-service or configured cloud speech recognition as described in Section 10
 
 ### Notification Permission (POST_NOTIFICATIONS)
 - **Purpose**: To show app update download notifications
@@ -126,14 +130,20 @@ We may update this Privacy Policy from time to time. We will notify you of any c
 
 BeeCount does NOT integrate any analytics, advertising, or crash-reporting SDKs.
 
-The following third parties are involved **only if you explicitly enable and configure the corresponding optional feature**, and each is controlled by YOU:
+The following services are involved only when you use the corresponding optional feature. Speech processing follows the selected recognition mode; the Android system service is provided by the device.
 
-### AI features (optional, off by default)
-When you enable AI features and configure a provider, BeeCount sends — for the request you initiate — receipt/screenshot images, voice recordings, text you type, and the category names, account names and transaction records needed to complete recognition or analysis, to the AI provider you configured:
-- **Zhipu GLM** (default, `open.bigmodel.cn`, operated by Zhipu) — subject to Zhipu's privacy policy.
-- **Any other third-party AI service you configure** — subject to that provider's privacy policy.
+### AI features and voice input (optional)
+Text and image requests go to the third-party AI provider you configure, including the text, receipt images, category names, account names and relevant transaction records needed for the request. New installations default to **Xiaomi MiMo** (`api.xiaomimimo.com`, operated by Xiaomi); existing users retain their provider choice. Other configured providers, including Zhipu GLM and custom providers, keep their existing behavior.
 
-AI is OFF by default and requires your own API key. The app shows an in-app notice naming the provider and the data involved, and asks for your consent, before any data is sent. BeeCount itself neither stores nor receives this data.
+Speech processing depends on the recognition mode:
+
+- **Android on-device**: raw speech is handled by the device's on-device recognition capability.
+- **Android system**: audio is handled by the device's system speech recognition service. It may use a network connection; audio processing depends on that service, which may differ from BeeCount's configured AI provider.
+- **Cloud AI**: raw recordings are sent to the currently configured speech provider for transcription. Other platforms continue to use cloud speech recognition.
+
+Voice bookkeeping sends the recognized text to the configured text AI provider to extract bills. The AI Chat microphone only inserts recognized text into a draft; it is sent to the text AI provider only when the user confirms and sends the message. Cloud transcription uploads recordings before the draft exists, and system recognition may also access the network before then.
+
+Each service processes data under its own privacy policy. AI bookkeeping and chat are off by default and require a configured text provider; local Android speech recognition does not require a cloud speech provider. The app requests consent to the current in-app notice before speech processing. Consent notice version 2 describes these paths and requires renewed consent from users who accepted version 1.
 
 ### Cloud sync (optional)
 - **Supabase**: subject to [Supabase Privacy Policy](https://supabase.com/privacy)
@@ -159,14 +169,14 @@ Since we don't collect any data, there's actually nothing to consent to - your p
 
 **蜜蜂记账隐私政策**
 
-**最后更新时间**: 2026-06-25
+**最后更新时间**: 2026-10-08
 
 ### 简要说明
 
 - **蜜蜂记账自身不收集你的数据,也不运营任何服务器**
 - **我们不使用任何分析或追踪服务**
 - **默认情况下,数据只保存在你的设备,不会外发**
-- **仅当你主动开启并配置 AI 功能时,相关数据才会发送给你选择的第三方 AI 服务商**
+- **AI 请求使用配置的服务商；语音输入按识别方式处理，可能使用设备系统语音服务**
 
 ### 1. 信息收集
 
@@ -200,16 +210,27 @@ Since we don't collect any data, there's actually nothing to consent to - your p
 
 - 默认情况下,数据不会离开你的设备。
 - 若你开启**云同步**,数据只发送到你自己配置的服务器(你的 Supabase / WebDAV)。
-- 若你开启 **AI 功能**,完成你发起的请求所需的数据,会发送给你配置的第三方 AI 服务商。
+- 若你使用 **AI 功能或语音输入**，数据由配置的 AI 服务商及所选语音识别方式处理；Android 系统模式可能由设备的系统语音服务联网处理。
 
-**AI 功能(可选,默认关闭)**:开启并配置服务商后,蜜蜂记账会就你发起的请求,把账单/截图图片、语音录音、你输入的文字,以及完成识别/分析所需的分类名称、账户名称和相关交易记录,发送给你配置的服务商 —— 默认「智谱 GLM」(open.bigmodel.cn,智谱华章运营),或你自配的任意第三方 AI 服务商;各自适用其隐私政策。AI 默认关闭、需你自带 API Key;发送前 App 会以应用内提示点名服务商与所涉数据并征得你的同意。蜜蜂记账自身既不接收也不存储这些数据。
+**AI 功能与语音输入（可选）**：文字、账单图片，以及记账或分析所需的分类名称、账户名称和相关交易记录，发送给你配置的 AI 服务商。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；既有用户保留服务商选择，智谱 GLM 和自定义服务商行为不变。
+
+语音处理取决于识别方式：
+
+- **Android 端侧**：原始语音由设备端识别能力处理。
+- **Android 系统**：使用设备的系统语音识别服务，可能联网；音频处理方式取决于该服务，不一定由 BeeCount 中配置的 AI 服务商处理。
+- **云端 AI**：原始录音发送给当前配置的语音服务商转写。其它平台继续使用云端语音识别。
+
+语音记账将识别文字发送给配置的文本 AI 服务商提取账单。AI Chat 麦克风只填写草稿，用户确认并发送消息后，文字才发送给文本 AI 服务商；云端转写在生成草稿前已上传录音，系统识别也可能在此之前联网。
+
+各服务依各自隐私政策处理数据。AI 记账与对话默认关闭，需配置文本服务商；Android 本地语音不需要云端语音服务商。App 在语音处理前要求同意当前告知。第 2 版告知包含上述路径，已同意第 1 版的用户需重新同意。
 
 ### 4. 权限请求
 
 应用请求以下Android权限：
 
 - **存储权限**：用于导入/导出CSV文件（可选）
-- **网络权限**：用于与您自己的云服务同步（可选）
+- **网络权限**：用于配置的云端/AI 服务；所选系统语音服务也可能联网
+- **麦克风权限**：仅在使用语音记账或 AI Chat 语音输入时请求，按所选识别方式处理
 - **通知权限**：用于显示应用更新通知（可选）
 - **提醒权限**：用于发送您设置的记账提醒（可选）
 

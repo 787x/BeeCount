@@ -1,3 +1,4 @@
+import '../../services/ai/speech_recognition.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -135,12 +136,21 @@ class SmartBillingPage extends ConsumerWidget {
   Widget _buildVoiceBillingSection(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(voiceBillingSettingsProvider);
+    final recognitionMode = ref.watch(speechRecognitionSettingsProvider);
     final isAuto = settings.triggerMode == VoiceTriggerMode.auto;
 
     return SectionCard(
       margin: EdgeInsets.zero,
       child: Column(
         children: [
+          if (Platform.isAndroid) ...[
+            AppListTile(
+                leading: Icons.record_voice_over_outlined,
+                title: l10n.speechRecognitionMode,
+                subtitle: _speechModeLabel(l10n, recognitionMode),
+                onTap: () => _showSpeechModeDialog(context, ref)),
+            BeeTokens.cardDivider(context),
+          ],
           AppListTile(
             leading: Icons.mic_none_outlined,
             title: l10n.smartBillingVoiceTrigger,
@@ -152,10 +162,63 @@ class SmartBillingPage extends ConsumerWidget {
           if (isAuto) ...[
             BeeTokens.cardDivider(context),
             const _VoiceSilenceTimeoutSlider(),
+            Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(l10n.speechCloudSilenceHint)),
           ],
         ],
       ),
     );
+  }
+
+  String _speechModeLabel(AppLocalizations l10n, SpeechRecognitionMode mode) =>
+      switch (mode) {
+        SpeechRecognitionMode.auto => l10n.speechModeAuto,
+        SpeechRecognitionMode.androidOnDevice => l10n.speechModeOnDevice,
+        SpeechRecognitionMode.androidSystem => l10n.speechModeSystem,
+        SpeechRecognitionMode.cloud => l10n.speechModeCloud,
+      };
+
+  Future<void> _showSpeechModeDialog(
+      BuildContext context, WidgetRef ref) async {
+    await ref.read(speechRecognitionSettingsProvider.notifier).loaded;
+    if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.speechRecognitionMode),
+              content: SingleChildScrollView(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                for (final mode in SpeechRecognitionMode.values)
+                  RadioListTile<SpeechRecognitionMode>(
+                      value: mode,
+                      groupValue: ref.read(speechRecognitionSettingsProvider),
+                      title: Text(_speechModeLabel(l10n, mode)),
+                      subtitle: Text(switch (mode) {
+                        SpeechRecognitionMode.auto => l10n.speechModeAutoDesc,
+                        SpeechRecognitionMode.androidOnDevice =>
+                          l10n.speechModeOnDeviceDesc,
+                        SpeechRecognitionMode.androidSystem =>
+                          l10n.speechModeSystemDesc,
+                        SpeechRecognitionMode.cloud => l10n.speechModeCloudDesc,
+                      }),
+                      onChanged: (value) async {
+                        if (value == null) return;
+                        await ref
+                            .read(speechRecognitionSettingsProvider.notifier)
+                            .setMode(value);
+                        if (dialogContext.mounted) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      }),
+              ])),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(l10n.commonCancel))
+              ],
+            ));
   }
 
   /// 触发方式选择弹窗

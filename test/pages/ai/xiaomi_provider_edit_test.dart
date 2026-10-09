@@ -35,7 +35,8 @@ void main() {
       },
     )));
     expect(find.text('Base URL'), findsNothing);
-    expect(tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+    expect(
+        tester.widget<SwitchListTile>(find.byType(SwitchListTile).first).value,
         isTrue);
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();
@@ -79,20 +80,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(calls, 1);
-    await tester.ensureVisible(find.byType(SwitchListTile));
-    await tester.tap(find.byType(SwitchListTile));
+    await tester.ensureVisible(find.byType(SwitchListTile).first);
+    await tester.tap(find.byType(SwitchListTile).first);
     await tester.pump();
     await tester.tap(find.text('保存').first);
     await tester.pumpAndSettle();
     final saved = await AIProviderManager.getProvider('xiaomi_mimo');
     expect(saved!.thinkingEnabled, isFalse);
+    expect(saved.assistantThinkingEnabled, isTrue);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpWidget(
         _host(AIProviderEditPage(provider: saved, modelLoader: load)));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
-    expect(tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+    expect(
+        tester.widget<SwitchListTile>(find.byType(SwitchListTile).first).value,
         isFalse);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));

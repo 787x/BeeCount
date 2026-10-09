@@ -180,10 +180,71 @@ void main() {
         throwsA(isA<XiaomiMiMoModelLoadException>()));
   });
 
+  test(
+      'legacy Thinking config initializes both settings and independent values round-trip',
+      () {
+    for (final value in [false, true]) {
+      final legacy = xiaomi.toJson()..remove('assistantThinkingEnabled');
+      legacy['thinkingEnabled'] = value;
+      final parsed = AIServiceProviderConfig.fromJson(legacy);
+      expect(parsed.thinkingEnabled, value);
+      expect(parsed.assistantThinkingEnabled, value);
+      final split = parsed.copyWith(assistantThinkingEnabled: !value);
+      final restored = AIServiceProviderConfig.fromJson(split.toJson());
+      expect(restored.thinkingEnabled, value);
+      expect(restored.assistantThinkingEnabled, !value);
+      expect(
+          restored.copyWith(thinkingEnabled: !value).assistantThinkingEnabled,
+          !value);
+    }
+  });
+
+  for (final quick in [true, false]) {
+    test(
+        'billing=$quick and Assistant=${!quick} use separate request parameters',
+        () async {
+      final config = xiaomi.copyWith(
+          thinkingEnabled: quick, assistantThinkingEnabled: !quick);
+      final bodies = <Map>[];
+      final dio = Dio()
+        ..httpClientAdapter = _Adapter((request) {
+          bodies.add(Map.of(request.data as Map));
+          if ((request.data as Map)['stream'] == true) {
+            return _json({'error': 'streaming unsupported'}, status: 400);
+          }
+          return _json({
+            'choices': [
+              {
+                'message': {'content': 'ok'}
+              }
+            ]
+          });
+        });
+      await AIProviderFactory.validateTextCapability(config, client: dio);
+      expect(
+          bodies.first['thinking'], {'type': quick ? 'enabled' : 'disabled'});
+      expect(bodies.first.containsKey('temperature'), !quick);
+      bodies.clear();
+      await AIProviderFactory.chatWithToolsStreamForConfig(
+              config: config,
+              messages: [
+                {'role': 'user', 'content': 'test'}
+              ],
+              tools: [],
+              client: dio)
+          .toList();
+      for (final body in bodies) {
+        expect(body['thinking'], {'type': !quick ? 'enabled' : 'disabled'});
+        expect(body.containsKey('temperature'), quick);
+      }
+    });
+  }
+
   for (final enabled in [true, false]) {
     test('generation, native probe and tool fallback honor Thinking=$enabled',
         () async {
-      final config = xiaomi.copyWith(thinkingEnabled: enabled);
+      final config = xiaomi.copyWith(
+          thinkingEnabled: enabled, assistantThinkingEnabled: enabled);
       final requests = <Map>[];
       final dio = Dio()
         ..httpClientAdapter = _Adapter((request) {
@@ -304,7 +365,9 @@ void main() {
         });
       expect(
           (await AIProviderFactory.validateVisionCapability(
-                  xiaomi.copyWith(thinkingEnabled: enabled),
+                  xiaomi.copyWith(
+                      thinkingEnabled: enabled,
+                      assistantThinkingEnabled: enabled),
                   client: dio))
               .$1,
           isTrue);

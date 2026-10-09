@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiConsentBody.
   ///
   /// In en, this message translates to:
-  /// **'AI features need to send related data to the third-party AI provider you configure:\n\n• Who it goes to: Xiaomi MiMo by default for new installations (api.xiaomimimo.com, operated by Xiaomi; existing users retain their provider); if you configure another third-party AI service, it goes to the provider you entered.\n• What is sent: the content you actively use for recognition/chat — receipt images, voice recordings, text you type, plus the category names, account names and relevant transaction records needed to complete recognition/analysis.\n• Purpose: only for bill recognition, bookkeeping and chats you initiate; BeeCount itself does not collect or store this data.\n\nThe data is processed by that third-party provider under its own privacy policy. Enabling means you consent to the data sharing above.'**
+  /// **'AI features and voice input may process related data through these services:\n\n• Text and image AI: the third-party AI provider you configure processes text and receipt images you provide, plus category names, account names and relevant transaction records needed for bookkeeping or analysis. New installations default to Xiaomi MiMo (api.xiaomimimo.com, operated by Xiaomi); existing users retain their provider selection.\n• Android on-device speech: raw speech is processed by the device\'s on-device recognition capability.\n• Android system speech: uses the device\'s system speech recognition service, which may need a network connection. How audio is processed depends on that service, which may differ from the AI provider configured in BeeCount.\n• Cloud AI speech: raw recordings are sent to BeeCount\'s currently configured speech provider for transcription.\n\nRecognized text: voice bookkeeping sends the text to your configured text AI provider for bookkeeping. The AI Chat microphone only fills a draft; text goes to the text AI provider only after you confirm and send the message. Cloud transcription uploads audio before the draft is generated, and system recognition may also access the network before then.\n\nData is used only for recognition, bookkeeping and conversations you initiate. Each service processes data under its own privacy policy. Enabling means you consent to the processing and sharing described above.'**
   String get aiConsentBody;
 
   /// No description provided for @aiConsentAgree.
@@ -15655,6 +15655,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This transaction cannot be copied. Check the ledger and your access.'**
   String get transactionCopyUnavailable;
+
+  /// No description provided for @speechRecognitionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition'**
+  String get speechRecognitionMode;
+
+  /// No description provided for @speechModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (recommended)'**
+  String get speechModeAuto;
+
+  /// No description provided for @speechModeOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Android on-device'**
+  String get speechModeOnDevice;
+
+  /// No description provided for @speechModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Android system'**
+  String get speechModeSystem;
+
+  /// No description provided for @speechModeCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud AI'**
+  String get speechModeCloud;
+
+  /// No description provided for @speechModeAutoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer on-device, then system recognition, then cloud AI when neither is available.'**
+  String get speechModeAutoDesc;
+
+  /// No description provided for @speechModeOnDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only supported on-device recognition.'**
+  String get speechModeOnDeviceDesc;
+
+  /// No description provided for @speechModeSystemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the system speech service, which may need a network connection.'**
+  String get speechModeSystemDesc;
+
+  /// No description provided for @speechModeCloudDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the configured speech model.'**
+  String get speechModeCloudDesc;
+
+  /// No description provided for @speechOnDeviceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device recognition is unavailable. Choose automatic, system or cloud mode.'**
+  String get speechOnDeviceUnavailable;
+
+  /// No description provided for @speechSystemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No system speech recognition service is available.'**
+  String get speechSystemUnavailable;
+
+  /// No description provided for @speechCloudUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a cloud speech model first.'**
+  String get speechCloudUnavailable;
+
+  /// No description provided for @speechUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognition is available. Check the system speech service or configure a cloud speech model.'**
+  String get speechUnavailable;
+
+  /// No description provided for @speechBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is busy. Try again later.'**
+  String get speechBusy;
+
+  /// No description provided for @speechNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition could not connect. Try again.'**
+  String get speechNetworkError;
+
+  /// No description provided for @speechRecognitionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition failed. Try again.'**
+  String get speechRecognitionFailed;
+
+  /// No description provided for @speechListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get speechListening;
+
+  /// No description provided for @speechInputAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input'**
+  String get speechInputAction;
+
+  /// No description provided for @speechCloudSilenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence timeout only affects automatic cloud recording. System recognition detects the end of speech itself.'**
+  String get speechCloudSilenceHint;
+
+  /// No description provided for @billingQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick bookkeeping'**
+  String get billingQuickActions;
+
+  /// No description provided for @billingManualAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual entry'**
+  String get billingManualAction;
+
+  /// No description provided for @aiMiMoQuickThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick billing Thinking'**
+  String get aiMiMoQuickThinking;
+
+  /// No description provided for @aiMiMoAssistantThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant Thinking'**
+  String get aiMiMoAssistantThinking;
+
+  /// No description provided for @speechClientError.
+  ///
+  /// In en, this message translates to:
+  /// **'The system speech service could not start. Check the default speech service settings or use cloud AI.'**
+  String get speechClientError;
+
+  /// No description provided for @speechLanguageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'The speech service does not support this language. Check its settings or use cloud AI.'**
+  String get speechLanguageUnsupported;
+
+  /// No description provided for @speechLanguageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition for this language is not available. Check the speech service settings or use cloud AI.'**
+  String get speechLanguageUnavailable;
+
+  /// No description provided for @speechServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'The system speech service is temporarily unavailable. Try again later.'**
+  String get speechServerError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

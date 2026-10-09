@@ -193,7 +193,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiConsentTitle => '开启 AI 功能前,请知悉';
 
   @override
-  String get aiConsentBody => 'AI 功能需将相关数据发送给你所配置的第三方 AI 服务商进行处理:\n\n• 发送给谁:新安装默认「Xiaomi MiMo」(api.xiaomimimo.com,由小米运营；升级用户保留原服务商);若你自行配置了其它第三方 AI 服务商,则发送给你填写的服务商。\n• 发送什么:你主动用于识别/对话的内容 —— 账单图片、语音录音、你输入的文字,以及为完成识别/分析所需的分类名称、账户名称和相关交易记录。\n• 用途:仅用于账单识别、记账与你发起的对话分析;蜜蜂记账自身不收集、不存储这些数据。\n\n数据由该第三方服务商按其隐私政策处理。开启即表示你同意上述数据共享。';
+  String get aiConsentBody => 'AI 功能及语音输入可能由以下服务处理相关数据：\n\n• 文字与图片 AI：你配置的第三方 AI 服务商处理你主动提供的文字、账单图片，以及完成记账或分析所需的分类名称、账户名称和相关交易记录。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；已有用户保留原服务商选择。\n• Android 端侧语音：原始语音由设备端识别能力处理。\n• Android 系统语音：使用设备提供的系统语音识别服务，可能需要网络；音频如何处理取决于该系统服务，不一定由 BeeCount 中配置的 AI 服务商处理。\n• 云端 AI 语音：原始录音发送给 BeeCount 当前配置的语音服务商进行转写。\n\n识别后的文字：语音记账会将文字发送给配置的文本 AI 服务商完成记账；AI Chat 麦克风只将文字填入草稿，只有你确认并发送消息后才发送给文本 AI 服务商。云端转写在生成草稿前已发送录音，系统识别也可能在此之前联网。\n\n数据仅用于你主动发起的识别、记账与对话。相关服务按各自隐私政策处理数据。启用即表示你同意上述数据处理与共享。';
 
   @override
   String get aiConsentAgree => '同意并开启';
@@ -8260,6 +8260,87 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transactionCopyUnavailable => '无法复制这笔交易，请检查账本和访问权限。';
+
+  @override
+  String get speechRecognitionMode => '语音识别方式';
+
+  @override
+  String get speechModeAuto => '自动（推荐）';
+
+  @override
+  String get speechModeOnDevice => 'Android 端侧识别';
+
+  @override
+  String get speechModeSystem => 'Android 系统识别';
+
+  @override
+  String get speechModeCloud => '云端 AI';
+
+  @override
+  String get speechModeAutoDesc => '优先端侧，其次系统服务，均不可用时使用云端 AI。';
+
+  @override
+  String get speechModeOnDeviceDesc => '仅使用设备支持的端侧识别。';
+
+  @override
+  String get speechModeSystemDesc => '使用系统语音服务，可能需要网络。';
+
+  @override
+  String get speechModeCloudDesc => '使用当前配置的语音模型。';
+
+  @override
+  String get speechOnDeviceUnavailable => '此设备不支持端侧识别，请切换自动、系统或云端模式。';
+
+  @override
+  String get speechSystemUnavailable => '系统没有可用的语音识别服务。';
+
+  @override
+  String get speechCloudUnavailable => '请先配置云端语音模型。';
+
+  @override
+  String get speechUnavailable => '没有可用的语音识别方式，请检查系统语音服务或配置云端语音模型。';
+
+  @override
+  String get speechBusy => '语音服务正在使用，请稍后重试。';
+
+  @override
+  String get speechNetworkError => '语音识别网络连接失败，请重试。';
+
+  @override
+  String get speechRecognitionFailed => '语音识别失败，请重试。';
+
+  @override
+  String get speechListening => '正在听，请说话…';
+
+  @override
+  String get speechInputAction => '语音输入';
+
+  @override
+  String get speechCloudSilenceHint => '静音时长仅影响云端自动录音；系统识别自行判断说话结束。';
+
+  @override
+  String get billingQuickActions => '快捷记账';
+
+  @override
+  String get billingManualAction => '手动记账';
+
+  @override
+  String get aiMiMoQuickThinking => '快速记账深度思考';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 助手深度思考';
+
+  @override
+  String get speechClientError => '系统语音服务无法启动，请检查设备的默认语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechLanguageUnsupported => '系统语音服务不支持当前语言，请检查语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechLanguageUnavailable => '系统语音服务尚未提供当前语言的识别能力，请检查语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechServerError => '系统语音服务暂时不可用，请稍后重试。';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -8303,7 +8384,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aiConsentTitle => '開啟 AI 功能前,請知悉';
 
   @override
-  String get aiConsentBody => 'AI 功能需將相關資料傳送給你所設定的第三方 AI 服務商進行處理:\n\n• 傳送給誰:新安裝預設「Xiaomi MiMo」(api.xiaomimimo.com,由小米營運；升級用戶保留原服務商);若你自行設定了其它第三方 AI 服務商,則傳送給你填寫的服務商。\n• 傳送什麼:你主動用於辨識/對話的內容 —— 帳單圖片、語音錄音、你輸入的文字,以及為完成辨識/分析所需的分類名稱、帳戶名稱和相關交易記錄。\n• 用途:僅用於帳單辨識、記帳與你發起的對話分析;蜜蜂記帳本身不收集、不儲存這些資料。\n\n資料由該第三方服務商依其隱私政策處理。開啟即表示你同意上述資料共享。';
+  String get aiConsentBody => 'AI 功能及語音輸入可能由以下服務處理相關資料：\n\n• 文字與圖片 AI：你設定的第三方 AI 服務商處理你主動提供的文字、帳單圖片，以及完成記帳或分析所需的分類名稱、帳戶名稱和相關交易紀錄。新安裝預設使用 Xiaomi MiMo（api.xiaomimimo.com，小米營運）；既有使用者保留原服務商選擇。\n• Android 裝置端語音：原始語音由裝置端辨識能力處理。\n• Android 系統語音：使用裝置提供的系統語音辨識服務，可能需要網路；音訊如何處理取決於該系統服務，不一定由 BeeCount 中設定的 AI 服務商處理。\n• 雲端 AI 語音：原始錄音傳送給 BeeCount 目前設定的語音服務商進行轉寫。\n\n辨識後的文字：語音記帳會將文字傳送給設定的文字 AI 服務商完成記帳；AI Chat 麥克風只將文字填入草稿，只有你確認並傳送訊息後才傳送給文字 AI 服務商。雲端轉寫在產生草稿前已傳送錄音，系統辨識也可能在此之前連線。\n\n資料僅用於你主動發起的辨識、記帳與對話。相關服務依各自隱私政策處理資料。啟用即表示你同意上述資料處理與共享。';
 
   @override
   String get aiConsentAgree => '同意並開啟';
@@ -15875,4 +15956,85 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get annualReportDownloadHint => '掃碼下載蜜蜂記帳，開啟你的記帳之旅';
+
+  @override
+  String get speechRecognitionMode => '語音辨識方式';
+
+  @override
+  String get speechModeAuto => '自動（推薦）';
+
+  @override
+  String get speechModeOnDevice => 'Android 裝置端辨識';
+
+  @override
+  String get speechModeSystem => 'Android 系統辨識';
+
+  @override
+  String get speechModeCloud => '雲端 AI';
+
+  @override
+  String get speechModeAutoDesc => '優先裝置端，其次系統服務，均不可用時使用雲端 AI。';
+
+  @override
+  String get speechModeOnDeviceDesc => '僅使用裝置支援的端側辨識。';
+
+  @override
+  String get speechModeSystemDesc => '使用系統語音服務，可能需要網路。';
+
+  @override
+  String get speechModeCloudDesc => '使用目前設定的語音模型。';
+
+  @override
+  String get speechOnDeviceUnavailable => '此裝置不支援端側辨識，請切換自動、系統或雲端模式。';
+
+  @override
+  String get speechSystemUnavailable => '系統沒有可用的語音辨識服務。';
+
+  @override
+  String get speechCloudUnavailable => '請先設定雲端語音模型。';
+
+  @override
+  String get speechUnavailable => '沒有可用的語音辨識方式，請檢查系統服務或設定雲端語音模型。';
+
+  @override
+  String get speechBusy => '語音服務正在使用，請稍後重試。';
+
+  @override
+  String get speechNetworkError => '語音辨識網路連線失敗，請重試。';
+
+  @override
+  String get speechRecognitionFailed => '語音辨識失敗，請重試。';
+
+  @override
+  String get speechListening => '正在聆聽，請說話…';
+
+  @override
+  String get speechInputAction => '語音輸入';
+
+  @override
+  String get speechCloudSilenceHint => '靜音時間僅影響雲端自動錄音；系統辨識自行判斷說話結束。';
+
+  @override
+  String get billingQuickActions => '快捷記帳';
+
+  @override
+  String get billingManualAction => '手動記帳';
+
+  @override
+  String get aiMiMoQuickThinking => '快速記帳深度思考';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 助手深度思考';
+
+  @override
+  String get speechClientError => '系統語音服務無法啟動，請檢查裝置的預設語音服務設定或切換雲端 AI。';
+
+  @override
+  String get speechLanguageUnsupported => '系統語音服務不支援目前語言，請檢查語音服務設定或切換雲端 AI。';
+
+  @override
+  String get speechLanguageUnavailable => '系統語音服務尚未提供目前語言的辨識能力，請檢查設定或切換雲端 AI。';
+
+  @override
+  String get speechServerError => '系統語音服務暫時無法使用，請稍後重試。';
 }

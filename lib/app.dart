@@ -18,6 +18,7 @@ import 'providers.dart';
 import 'l10n/app_localizations.dart';
 import 'widget/widget_manager.dart';
 import 'widgets/ui/ui.dart';
+import 'widgets/biz/billing_quick_actions.dart';
 import 'widgets/ui/speed_dial_fab.dart';
 import 'cloud/sync_service.dart';
 import 'cloud/transactions_sync_manager.dart';
@@ -592,6 +593,13 @@ class _BeeAppState extends ConsumerState<BeeApp>
     _overlayEntry = null;
   }
 
+  Future<void> _showBillingQuickActions() async {
+    final action = await showModalBottomSheet<AppLinkAction>(
+        context: context, builder: (_) => const BillingQuickActions());
+    if (!mounted || action == null) return;
+    _openDeepLink(action, null);
+  }
+
   void _onLongPressStart(LongPressStartDetails details) {
     _expandController.forward();
     _showOverlay();
@@ -606,17 +614,17 @@ class _BeeAppState extends ConsumerState<BeeApp>
       SpeedDialAction(
         icon: Icons.camera_alt_rounded,
         label: AppLocalizations.of(context).fabActionCamera,
-        onTap: () => ImageBillingHelper.openCameraForBilling(context, ref),
+        onTap: () => _openDeepLink(AppLinkAction.camera, null),
       ),
       SpeedDialAction(
         icon: Icons.photo_library_rounded,
         label: AppLocalizations.of(context).fabActionGallery,
-        onTap: () => ImageBillingHelper.pickImageForBilling(context, ref),
+        onTap: () => _openDeepLink(AppLinkAction.image, null),
       ),
       SpeedDialAction(
         icon: Icons.mic_rounded,
         label: AppLocalizations.of(context).fabActionVoice,
-        onTap: () => VoiceBillingHelper.startVoiceBilling(context, ref),
+        onTap: () => _openDeepLink(AppLinkAction.voice, null),
       ),
     ];
 
@@ -652,17 +660,17 @@ class _BeeAppState extends ConsumerState<BeeApp>
           SpeedDialAction(
             icon: Icons.camera_alt_rounded,
             label: AppLocalizations.of(context).fabActionCamera,
-            onTap: () => ImageBillingHelper.openCameraForBilling(context, ref),
+            onTap: () => _openDeepLink(AppLinkAction.camera, null),
           ),
           SpeedDialAction(
             icon: Icons.photo_library_rounded,
             label: AppLocalizations.of(context).fabActionGallery,
-            onTap: () => ImageBillingHelper.pickImageForBilling(context, ref),
+            onTap: () => _openDeepLink(AppLinkAction.image, null),
           ),
           SpeedDialAction(
             icon: Icons.mic_rounded,
             label: AppLocalizations.of(context).fabActionVoice,
-            onTap: () => VoiceBillingHelper.startVoiceBilling(context, ref),
+            onTap: () => _openDeepLink(AppLinkAction.voice, null),
           ),
         ],
         animation: _expandAnimation,
@@ -859,17 +867,7 @@ class _BeeAppState extends ConsumerState<BeeApp>
                   ref.read(bottomTabIndexProvider.notifier).state = index;
                 }
               },
-              onCenterTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TransactionEditorPage(
-                      initialKind: 'expense',
-                      quickAdd: true,
-                    ),
-                  ),
-                );
-              },
+              onCenterTap: _showBillingQuickActions,
               onCenterLongPressStart: _onLongPressStart,
               onCenterLongPressMoveUpdate: _onLongPressMoveUpdate,
               onCenterLongPressEnd: _onLongPressEnd,

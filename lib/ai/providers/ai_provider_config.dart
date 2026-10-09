@@ -34,8 +34,11 @@ class AIServiceProviderConfig {
   /// Provider 请求协议。
   final AIProviderDialect dialect;
 
-  /// MiMo 深度思考设置（不影响 ASR）。
+  /// MiMo 快速记账深度思考设置（保留旧 JSON key，不影响 ASR）。
   final bool thinkingEnabled;
+
+  /// MiMo Assistant Thinking; legacy configs inherit the billing value.
+  final bool assistantThinkingEnabled;
 
   /// 只有显式选择 MiMo 协议才应用其请求语义。
   bool get isXiaomiMiMo => dialect == AIProviderDialect.xiaomiMiMo;
@@ -57,8 +60,9 @@ class AIServiceProviderConfig {
     this.audioModel = '',
     this.dialect = AIProviderDialect.openAiCompatible,
     this.thinkingEnabled = true,
+    bool? assistantThinkingEnabled,
     required this.createdAt,
-  });
+  }) : assistantThinkingEnabled = assistantThinkingEnabled ?? thinkingEnabled;
 
   /// 小米 MiMo 按量 API 内置配置。
   static AIServiceProviderConfig get xiaomiDefault => AIServiceProviderConfig(
@@ -109,6 +113,7 @@ class AIServiceProviderConfig {
     String? audioModel,
     AIProviderDialect? dialect,
     bool? thinkingEnabled,
+    bool? assistantThinkingEnabled,
     DateTime? createdAt,
   }) {
     return AIServiceProviderConfig(
@@ -122,6 +127,8 @@ class AIServiceProviderConfig {
       audioModel: audioModel ?? this.audioModel,
       dialect: dialect ?? this.dialect,
       thinkingEnabled: thinkingEnabled ?? this.thinkingEnabled,
+      assistantThinkingEnabled:
+          assistantThinkingEnabled ?? this.assistantThinkingEnabled,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -141,6 +148,7 @@ class AIServiceProviderConfig {
           ? AIProviderDialect.xiaomiMiMo
           : AIProviderDialect.openAiCompatible,
       thinkingEnabled: json['thinkingEnabled'] as bool? ?? true,
+      assistantThinkingEnabled: json['assistantThinkingEnabled'] as bool?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
@@ -160,6 +168,7 @@ class AIServiceProviderConfig {
       'audioModel': audioModel,
       'dialect': dialect.name,
       'thinkingEnabled': thinkingEnabled,
+      'assistantThinkingEnabled': assistantThinkingEnabled,
       'createdAt': createdAt.toIso8601String(),
     };
   }

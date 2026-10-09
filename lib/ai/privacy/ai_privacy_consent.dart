@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 当前 AI 隐私"告知+同意"文案版本。文案实质变更时 +1,可强制用户重新同意。
-const int kAiPrivacyConsentVersion = 1;
+const int kAiPrivacyConsentVersion = 2;
 
 /// AI 第三方数据共享"告知+同意"的持久化存取(纯逻辑,便于单测)。
 ///
