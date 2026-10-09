@@ -3,7 +3,8 @@ import 'dart:convert';
 
 import 'package:beecount/ai/providers/ai_provider_config.dart';
 import 'package:beecount/ai/providers/ai_provider_manager.dart';
-import 'package:beecount/ai/providers/xiaomi_mimo_profile.dart';
+import 'package:beecount/ai/providers/deepseek_profile.dart';
+import 'package:beecount/ai/providers/provider_models.dart';
 import 'package:beecount/l10n/app_localizations.dart';
 import 'package:beecount/pages/ai/ai_provider_manage_page.dart';
 import 'package:beecount/widgets/ai/provider_model_settings.dart';
@@ -22,12 +23,13 @@ Widget _host(Widget child) => ProviderScope(
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('Xiaomi hides URL, uses dropdowns and auto-loads after key entry',
+  testWidgets(
+      'DeepSeek hides URL, uses dropdowns and auto-loads after key entry',
       (tester) async {
-    final pending = Completer<XiaomiMiMoModels>();
+    final pending = Completer<ProviderModels>();
     var calls = 0;
     await tester.pumpWidget(_host(AIProviderEditPage(
-      provider: AIServiceProviderConfig.xiaomiDefault,
+      provider: AIServiceProviderConfig.deepSeekDefault,
       modelLoader: (key) {
         calls++;
         expect(key, 'test');
@@ -41,7 +43,7 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();
     expect(find.text('输入 API Key 后自动获取可用模型'), findsOneWidget);
-    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(3));
+    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
     await tester.drag(find.byType(ListView), const Offset(0, 600));
     await tester.pumpAndSettle();
     final fields = find.byType(TextField);
@@ -54,7 +56,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
     expect(calls, 1);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    pending.complete(XiaomiMiMoModels(['mimo-v2.6-flash', 'mimo-v2.5-asr']));
+    expect(find.text('语音模型'), findsNothing);
+    pending.complete(
+        ProviderModels(text: ['deepseek-flash'], vision: ['deepseek-flash']));
     await tester.pumpAndSettle();
     expect(find.byType(LinearProgressIndicator), findsNothing);
     await tester.pumpWidget(const SizedBox());
@@ -65,14 +69,15 @@ void main() {
       'Thinking switch saves and reloads; existing key loads without test click',
       (tester) async {
     final provider =
-        AIServiceProviderConfig.xiaomiDefault.copyWith(apiKey: 'test');
+        AIServiceProviderConfig.deepSeekDefault.copyWith(apiKey: 'test');
     SharedPreferences.setMockInitialValues({
       'ai_providers_v2': jsonEncode([provider.toJson()]),
     });
     var calls = 0;
-    Future<XiaomiMiMoModels> load(String key) async {
+    Future<ProviderModels> load(String key) async {
       calls++;
-      return XiaomiMiMoModels(['mimo-v2.6-flash', 'mimo-v2.5-asr']);
+      return ProviderModels(
+          text: ['deepseek-flash'], vision: ['deepseek-flash']);
     }
 
     await tester.pumpWidget(
@@ -85,7 +90,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('保存').first);
     await tester.pumpAndSettle();
-    final saved = await AIProviderManager.getProvider('xiaomi_mimo');
+    final saved = await AIProviderManager.getProvider('deepseek');
     expect(saved!.thinkingEnabled, isFalse);
     expect(saved.assistantThinkingEnabled, isTrue);
     await tester.pumpWidget(const SizedBox());
@@ -101,66 +106,47 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('custom provider retains URL and manual model inputs',
-      (tester) async {
-    await tester.pumpWidget(_host(const AIProviderEditPage()));
-    expect(find.text('Base URL'), findsOneWidget);
-    await tester.drag(find.byType(ListView), const Offset(0, -400));
-    await tester.pumpAndSettle();
-    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
-    expect(find.byType(TextField), findsNWidgets(3));
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(seconds: 3));
-  });
-
   testWidgets(
-      'failed refresh keeps saved models; retry replaces retired selection and clears empty list',
+      'DeepSeek failed refresh preserves models; retry filters modalities and clears empty lists',
       (tester) async {
     var calls = 0;
     var text = 'retired';
-    var vision = 'mimo-v2.6-pro';
-    var audio = 'mimo-v2.5-asr';
+    var vision = 'saved-image';
     await tester.pumpWidget(
         _host(Scaffold(body: StatefulBuilder(builder: (context, update) {
       return ProviderModelSettings(
-          apiKey: 'key',
+          apiKey: 'test',
           textModel: text,
           visionModel: vision,
-          audioModel: audio,
+          audioModel: '',
+          preferredModel: DeepSeekProfile.generationModel,
+          showSpeech: false,
           loadModels: (_) async {
             calls++;
-            if (calls == 1) throw const XiaomiMiMoModelLoadException(true);
-            return XiaomiMiMoModels(calls == 2
-                ? [
-                    'mimo-v2.6-flash',
-                    'mimo-v2.6-pro',
-                    'mimo-v2.5-asr',
-                    'mimo-future'
-                  ]
-                : []);
+            if (calls == 1) throw const ProviderModelLoadException(true);
+            return ProviderModels(
+                text: calls == 2 ? ['text-only', 'deepseek-flash'] : [],
+                vision: calls == 2 ? ['deepseek-flash', 'saved-image'] : []);
           },
           onChanged: (t, v, a) => update(() {
                 text = t;
                 vision = v;
-                audio = a;
               }));
     }))));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(text, 'retired');
+    expect(vision, 'saved-image');
     expect(find.text('API Key 无效或无权限；模型列表尚未刷新'), findsOneWidget);
-    expect(find.text('retired'), findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
     await tester.tap(find.text('重新获取模型'));
     await tester.pumpAndSettle();
-    expect(text, 'mimo-v2.6-flash');
-    expect(vision, 'mimo-v2.6-pro');
-    expect(find.textContaining('已保存的模型不可用'), findsOneWidget);
+    expect(text, 'deepseek-flash');
+    expect(vision, 'saved-image');
     await tester.tap(find.text('重新获取模型'));
     await tester.pumpAndSettle();
     expect(text, isEmpty);
     expect(vision, isEmpty);
-    expect(audio, isEmpty);
-    expect(find.text('获取成功，当前账号没有可用模型'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 }

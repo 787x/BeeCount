@@ -9,6 +9,7 @@
   "aiMiMoModelsLoaded": "Available account models loaded",
   "aiMiMoModelsRefresh": "Refresh models",
   "aiMiMoModelUnavailable": "Saved model unavailable; an available replacement was selected. Review before saving",
+  "aiDeepSeekModelsHint": "Models are loaded from DeepSeek and filtered by supported input type.",
   "aiMiMoModelsHint": "Models are loaded from Xiaomi. Uses the pay-as-you-go API.",
 
   "@@locale": "en",

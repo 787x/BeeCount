@@ -11,6 +11,10 @@ import 'package:beecount/utils/website_urls.dart';
 /// - 路径为 `/docs/cloud-sync/<topic>`;
 /// - embed 参数齐全:embed=1 + theme(dark/light) + primary(主题色 hex)。
 void main() {
+  test('DeepSeek API key link targets its console', () {
+    expect(
+        WebsiteUrls.deepSeekApiKeys, 'https://platform.deepseek.com/api_keys');
+  });
   test('MiMo API key link targets its console', () {
     expect(WebsiteUrls.xiaomiMiMoApiKeys,
         'https://platform.xiaomimimo.com/console/api-keys');

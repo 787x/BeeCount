@@ -59,6 +59,7 @@ class AIProviderManager {
         final defaultProviders = [
           AIServiceProviderConfig.xiaomiDefault,
           AIServiceProviderConfig.zhipuDefault,
+          AIServiceProviderConfig.deepSeekDefault,
         ];
         // 只有完全没有历史配置时才写入新的默认绑定。
         if (!prefs.containsKey(_keyProviders) &&
@@ -100,6 +101,11 @@ class AIProviderManager {
 
       if (!providers.any((p) => p.id == 'xiaomi_mimo')) {
         providers.insert(0, AIServiceProviderConfig.xiaomiDefault);
+        await _saveProviders(providers);
+      }
+
+      if (!providers.any((p) => p.id == 'deepseek')) {
+        providers.add(AIServiceProviderConfig.deepSeekDefault);
         await _saveProviders(providers);
       }
 
@@ -463,6 +469,7 @@ class AIProviderManager {
 
     final providers = <AIServiceProviderConfig>[
       AIServiceProviderConfig.xiaomiDefault,
+      AIServiceProviderConfig.deepSeekDefault,
       // 智谱GLM（从旧配置读取 API Key）
       AIServiceProviderConfig.zhipuDefault.copyWith(
         apiKey: glmApiKey,

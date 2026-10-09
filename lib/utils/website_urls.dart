@@ -7,6 +7,9 @@ class WebsiteUrls {
   /// Xiaomi MiMo 按量 API 控制台。
   static const xiaomiMiMoApiKeys =
       'https://platform.xiaomimimo.com/console/api-keys';
+
+  /// DeepSeek API Key 控制台。
+  static const deepSeekApiKeys = 'https://platform.deepseek.com/api_keys';
   WebsiteUrls._();
 
   /// 官网基础域名

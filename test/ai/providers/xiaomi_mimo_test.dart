@@ -28,7 +28,7 @@ void main() {
       expect(binding.toJson().values, everyElement('xiaomi_mimo'));
     }
     final providers = await AIProviderManager.getProviders();
-    expect(providers.map((p) => p.id), ['xiaomi_mimo', 'zhipu_glm']);
+    expect(providers.map((p) => p.id), ['xiaomi_mimo', 'zhipu_glm', 'deepseek']);
     expect(providers.first.apiKey, isEmpty);
     expect(providers.first.thinkingEnabled, isTrue);
   });

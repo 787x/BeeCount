@@ -30,7 +30,10 @@ class _AssistantThinkingControlState
     setState(() => _saving = true);
     try {
       final latest = await AIProviderManager.getProvider(provider.id);
-      if (!mounted || !widget.enabled || latest == null || !latest.isXiaomiMiMo) {
+      if (!mounted ||
+          !widget.enabled ||
+          latest == null ||
+          !latest.supportsThinkingControl) {
         return;
       }
       await AIProviderManager.updateProvider(
@@ -46,7 +49,7 @@ class _AssistantThinkingControlState
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(assistantTextProviderProvider).valueOrNull;
-    if (provider == null || !provider.isXiaomiMiMo) {
+    if (provider == null || !provider.supportsThinkingControl) {
       return const SizedBox.shrink();
     }
     return Align(

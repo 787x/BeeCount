@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
+import 'provider_models.dart';
+import 'thinking_parameters.dart';
+
 /// MiMo 按量 API 的 endpoint、请求差异和模型选择规则。
 abstract final class XiaomiMiMoProfile {
   static const providerId = 'xiaomi_mimo';
@@ -22,10 +25,7 @@ abstract final class XiaomiMiMoProfile {
 
   static Map<String, Object?> generationParameters(bool thinkingEnabled,
           {double? temperature}) =>
-      {
-        'thinking': {'type': thinkingEnabled ? 'enabled' : 'disabled'},
-        if (!thinkingEnabled && temperature != null) 'temperature': temperature,
-      };
+      thinkingParameters(thinkingEnabled, temperature: temperature);
 
   static Future<XiaomiMiMoModels> discover(String apiKey, {Dio? client}) async {
     final dio = client ??
@@ -100,22 +100,26 @@ final class XiaomiMiMoModelLoadException implements Exception {
 
 /// Identity-only discovery uses provider-local classification. New generation
 /// IDs remain selectable without a client update; TTS is never offered as ASR.
-final class XiaomiMiMoModels {
-  XiaomiMiMoModels(List<String> ids) : ids = List.unmodifiable(ids.toSet());
+final class XiaomiMiMoModels extends ProviderModels {
+  XiaomiMiMoModels(List<String> ids)
+      : ids = List.unmodifiable(ids.toSet()),
+        super(
+            text: _generation(ids),
+            vision: _generation(ids),
+            speech: _speech(ids));
   final List<String> ids;
-  List<String> get generation => ids
+  List<String> get generation => text;
+  static List<String> _generation(List<String> ids) => ids
       .where((id) =>
           !id.toLowerCase().contains('asr') &&
           !id.toLowerCase().contains('tts'))
       .toList();
-  List<String> get speech => ids
+  static List<String> _speech(List<String> ids) => ids
       .where((id) =>
           id.toLowerCase().contains('asr') && !id.toLowerCase().contains('tts'))
       .toList();
 
-  static String select(List<String> available, String saved, String preferred) {
-    if (available.contains(saved)) return saved;
-    if (available.contains(preferred)) return preferred;
-    return available.isEmpty ? '' : available.first;
-  }
+  static String select(
+          List<String> available, String saved, String preferred) =>
+      ProviderModels.select(available, saved, preferred);
 }

@@ -10,6 +10,8 @@ import 'package:flutter_ai_kit_zhipu/flutter_ai_kit_zhipu.dart';
 
 import 'ai_provider_config.dart';
 import 'xiaomi_mimo_profile.dart';
+import 'deepseek_profile.dart';
+import 'thinking_parameters.dart';
 import 'ai_provider_manager.dart';
 import '../../services/system/logger_service.dart';
 
@@ -24,8 +26,8 @@ class AIProviderFactory {
           AIServiceProviderConfig config,
           {double? temperature,
           bool assistant = false}) =>
-      config.isXiaomiMiMo
-          ? XiaomiMiMoProfile.generationParameters(
+      config.supportsThinkingControl
+          ? thinkingParameters(
               assistant
                   ? config.assistantThinkingEnabled
                   : config.thinkingEnabled,
@@ -37,7 +39,11 @@ class AIProviderFactory {
     return Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
-      baseUrl: config.isXiaomiMiMo ? XiaomiMiMoProfile.baseUrl : config.baseUrl,
+      baseUrl: config.isXiaomiMiMo
+          ? XiaomiMiMoProfile.baseUrl
+          : config.isDeepSeek
+              ? DeepSeekProfile.baseUrl
+              : config.baseUrl,
       headers: {
         'Authorization': 'Bearer ${config.apiKey}',
         'Content-Type': 'application/json',
@@ -614,7 +620,8 @@ class AIProviderFactory {
 
   /// Probes native function calling with synthetic data only.
   ///
-  /// Forced tool choice is attempted first, then `auto`. A model is considered
+  /// Generic providers try forced choice first, then `auto`; MiMo and DeepSeek
+  /// probe `auto` directly to match runtime. A model is considered
   /// Agent-capable only when it returns a structured `tool_calls` entry; plain
   /// text claiming that it called a tool does not pass the probe.
   static Future<AgentModelCapabilities> probeAgentCapabilities(
@@ -671,7 +678,7 @@ class AIProviderFactory {
     var forced = AgentCapabilitySupport.unknown;
     Map<String, dynamic>? response;
     Object? forcedError;
-    if (!config.isXiaomiMiMo) {
+    if (!config.supportsThinkingControl) {
       try {
         response = await _postToolCompletion(
           dio,
@@ -1204,6 +1211,9 @@ class AIProviderFactory {
   static Future<String> _speechToTextOpenAI(
       AIServiceProviderConfig config, File audio,
       {Dio? client}) async {
+    if (config.isDeepSeek) {
+      throw AIException('服务商 ${config.name} 未配置语音模型');
+    }
     final dio = client ?? _getDio(config);
     if (config.isXiaomiMiMo) {
       try {

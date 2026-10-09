@@ -37,6 +37,23 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
   });
+  testWidgets(
+      'DeepSeek toggle persists Assistant only, billing stays unchanged',
+      (tester) async {
+    configure(AIServiceProviderConfig.deepSeekDefault);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.text('AI 助手深度思考'), findsOneWidget);
+    await tester.tap(find.byType(FilterChip));
+    await tester.pumpAndSettle();
+    final config = await AIProviderManager.getProvider('deepseek');
+    expect(config!.assistantThinkingEnabled, isFalse);
+    expect(config.thinkingEnabled, isTrue);
+    expect(
+        tester.widget<FilterChip>(find.byType(FilterChip)).selected, isFalse);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
   testWidgets('non-MiMo provider hides the control', (tester) async {
     configure(AIServiceProviderConfig.zhipuDefault);
     await tester.pumpWidget(host());

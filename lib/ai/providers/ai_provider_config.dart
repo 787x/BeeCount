@@ -1,7 +1,8 @@
 import 'xiaomi_mimo_profile.dart';
+import 'deepseek_profile.dart';
 
 /// 显式选择请求协议；旧自定义配置继续使用 OpenAI-compatible。
-enum AIProviderDialect { openAiCompatible, xiaomiMiMo }
+enum AIProviderDialect { openAiCompatible, xiaomiMiMo, deepSeek }
 
 /// AI 服务商配置
 ///
@@ -34,14 +35,19 @@ class AIServiceProviderConfig {
   /// Provider 请求协议。
   final AIProviderDialect dialect;
 
-  /// MiMo 快速记账深度思考设置（保留旧 JSON key，不影响 ASR）。
+  /// 快速记账深度思考设置（保留旧 JSON key，不影响 ASR）。
   final bool thinkingEnabled;
 
-  /// MiMo Assistant Thinking; legacy configs inherit the billing value.
+  /// Assistant Thinking; legacy configs inherit the billing value.
   final bool assistantThinkingEnabled;
 
   /// 只有显式选择 MiMo 协议才应用其请求语义。
   bool get isXiaomiMiMo => dialect == AIProviderDialect.xiaomiMiMo;
+
+  bool get isDeepSeek => dialect == AIProviderDialect.deepSeek;
+
+  /// 显式声明支持持久化 Thinking 开关的协议。
+  bool get supportsThinkingControl => isXiaomiMiMo || isDeepSeek;
 
   /// 旧内置智谱配置继续使用现有 SDK。
   bool get isZhipu => isBuiltIn && id == 'zhipu_glm';
@@ -77,6 +83,18 @@ class AIServiceProviderConfig {
         createdAt: DateTime(2026, 1, 1),
       );
 
+  /// DeepSeek 内置配置；没有云端语音识别能力。
+  static AIServiceProviderConfig get deepSeekDefault => AIServiceProviderConfig(
+        id: DeepSeekProfile.providerId,
+        name: 'DeepSeek',
+        isBuiltIn: true,
+        dialect: AIProviderDialect.deepSeek,
+        baseUrl: DeepSeekProfile.baseUrl,
+        textModel: DeepSeekProfile.generationModel,
+        visionModel: DeepSeekProfile.generationModel,
+        createdAt: DateTime(2026, 1, 1),
+      );
+
   /// 智谱GLM 默认配置
   static AIServiceProviderConfig get zhipuDefault => AIServiceProviderConfig(
         id: 'zhipu_glm',
@@ -99,7 +117,7 @@ class AIServiceProviderConfig {
   bool get supportsVision => visionModel.isNotEmpty;
 
   /// 是否支持语音转文字
-  bool get supportsSpeech => audioModel.isNotEmpty;
+  bool get supportsSpeech => !isDeepSeek && audioModel.isNotEmpty;
 
   /// 复制并修改
   AIServiceProviderConfig copyWith({
@@ -146,7 +164,9 @@ class AIServiceProviderConfig {
       audioModel: json['audioModel'] as String? ?? '',
       dialect: json['dialect'] == 'xiaomiMiMo'
           ? AIProviderDialect.xiaomiMiMo
-          : AIProviderDialect.openAiCompatible,
+          : json['dialect'] == 'deepSeek'
+              ? AIProviderDialect.deepSeek
+              : AIProviderDialect.openAiCompatible,
       thinkingEnabled: json['thinkingEnabled'] as bool? ?? true,
       assistantThinkingEnabled: json['assistantThinkingEnabled'] as bool?,
       createdAt: json['createdAt'] != null
