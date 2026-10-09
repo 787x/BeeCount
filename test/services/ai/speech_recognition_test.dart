@@ -88,6 +88,104 @@ void main() {
           throwsA(isA<SpeechInputException>()));
     }
   });
+  test(
+      'auto actually opens cloud after an advertised system fails before speech',
+      () async {
+    final calls = <SpeechEngine>[];
+    final text = await recognizeSpeech(
+        mode: SpeechRecognitionMode.auto,
+        onDeviceAvailable: false,
+        systemAvailable: true,
+        cloudAvailable: () async => true,
+        listen: (engine) async {
+          calls.add(engine);
+          if (engine == SpeechEngine.system) {
+            throw const SpeechInputException('client', speechStarted: false);
+          }
+          return '午饭35';
+        });
+    expect(text, '午饭35');
+    expect(calls, [SpeechEngine.system, SpeechEngine.cloud]);
+  });
+  test(
+      'explicit system never runs cloud; speech and uncertain stages never retry',
+      () async {
+    for (final row in [
+      (
+        SpeechRecognitionMode.auto,
+        const SpeechInputException('client',
+            speechStarted: false, userStopped: true)
+      ),
+      (
+        SpeechRecognitionMode.androidSystem,
+        const SpeechInputException('client', speechStarted: false)
+      ),
+      (
+        SpeechRecognitionMode.auto,
+        const SpeechInputException('client', speechStarted: true)
+      ),
+      (
+        SpeechRecognitionMode.auto,
+        const SpeechInputException('network', speechStarted: true)
+      ),
+      (
+        SpeechRecognitionMode.auto,
+        const SpeechInputException('no_match', speechStarted: false)
+      ),
+      (SpeechRecognitionMode.auto, const SpeechInputException('client')),
+    ]) {
+      final calls = <SpeechEngine>[];
+      var cloudChecks = 0;
+      await expectLater(
+          recognizeSpeech(
+              mode: row.$1,
+              onDeviceAvailable: false,
+              systemAvailable: true,
+              cloudAvailable: () async {
+                cloudChecks++;
+                return true;
+              },
+              listen: (engine) async {
+                calls.add(engine);
+                throw row.$2;
+              }),
+          throwsA(isA<SpeechInputException>()));
+      expect(calls, [SpeechEngine.system]);
+      expect(cloudChecks, 0);
+    }
+  });
+  test(
+      'language failures before speech advance auto; cloud is checked at fallback',
+      () async {
+    for (final code in ['language_unavailable', 'language_unsupported']) {
+      var cloudCalls = 0;
+      expect(
+          await recognizeSpeech(
+              mode: SpeechRecognitionMode.auto,
+              onDeviceAvailable: true,
+              systemAvailable: true,
+              cloudAvailable: () async => true,
+              listen: (engine) async {
+                if (engine != SpeechEngine.cloud) {
+                  throw SpeechInputException(code, speechStarted: false);
+                }
+                cloudCalls++;
+                return 'ok';
+              }),
+          'ok');
+      expect(cloudCalls, 1);
+    }
+    await expectLater(
+        recognizeSpeech(
+            mode: SpeechRecognitionMode.auto,
+            onDeviceAvailable: false,
+            systemAvailable: true,
+            cloudAvailable: () async => false,
+            listen: (_) async => throw const SpeechInputException('client',
+                speechStarted: false)),
+        throwsA(isA<SpeechInputException>()
+            .having((e) => e.code, 'code', 'unavailable')));
+  });
   final bridge = AndroidSpeechRecognition();
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;

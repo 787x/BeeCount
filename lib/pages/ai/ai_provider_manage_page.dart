@@ -342,7 +342,7 @@ class _AIProviderManagePageState extends ConsumerState<AIProviderManagePage> {
       final success = await AIProviderManager.deleteProvider(provider.id);
       if (success) {
         ref.read(aiProviderListRefreshProvider.notifier).state++;
-        if (mounted) {
+        if (mounted && context.mounted) {
           showToast(context, deletedMessage);
         }
       }
@@ -376,6 +376,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
   late final TextEditingController _audioModelController;
 
   bool _thinkingEnabled = true;
+  bool _assistantThinkingEnabled = true;
   bool get _isXiaomi => widget.provider?.isXiaomiMiMo ?? false;
   bool _obscureApiKey = true;
   bool _saving = false;
@@ -400,6 +401,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     super.initState();
     final p = widget.provider;
     _thinkingEnabled = p?.thinkingEnabled ?? true;
+    _assistantThinkingEnabled = p?.assistantThinkingEnabled ?? true;
     _nameController = TextEditingController(text: p?.name ?? '');
     _apiKeyController = TextEditingController(text: p?.apiKey ?? '');
     _baseUrlController = TextEditingController(text: p?.baseUrl ?? '');
@@ -574,10 +576,16 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
                             label: Text(l10n.aiCloudApiGetKey),
                           ),
                           SwitchListTile(
-                            title: Text(l10n.aiMiMoThinking),
+                            title: Text(l10n.aiMiMoQuickThinking),
                             value: _thinkingEnabled,
                             onChanged: (value) =>
                                 setState(() => _thinkingEnabled = value),
+                          ),
+                          SwitchListTile(
+                            title: Text(l10n.aiMiMoAssistantThinking),
+                            value: _assistantThinkingEnabled,
+                            onChanged: (value) => setState(
+                                () => _assistantThinkingEnabled = value),
                           ),
                         ],
 
@@ -750,6 +758,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
       isBuiltIn: _isBuiltIn,
       dialect: widget.provider?.dialect ?? AIProviderDialect.openAiCompatible,
       thinkingEnabled: _thinkingEnabled,
+      assistantThinkingEnabled: _assistantThinkingEnabled,
       apiKey: _apiKeyController.text,
       baseUrl: _baseUrlController.text,
       textModel: _textModelController.text,
@@ -900,6 +909,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
           visionModel: _visionModelController.text.trim(),
           audioModel: _audioModelController.text.trim(),
           thinkingEnabled: _thinkingEnabled,
+          assistantThinkingEnabled: _assistantThinkingEnabled,
         );
         await AIProviderManager.updateProvider(updated);
       } else {

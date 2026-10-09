@@ -8323,6 +8323,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get billingManualAction => '手动记账';
+
+  @override
+  String get aiMiMoQuickThinking => '快速记账深度思考';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 助手深度思考';
+
+  @override
+  String get speechClientError => '系统语音服务无法启动，请检查设备的默认语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechLanguageUnsupported => '系统语音服务不支持当前语言，请检查语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechLanguageUnavailable => '系统语音服务尚未提供当前语言的识别能力，请检查语音服务设置或切换云端 AI。';
+
+  @override
+  String get speechServerError => '系统语音服务暂时不可用，请稍后重试。';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -16001,4 +16019,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get billingManualAction => '手動記帳';
+
+  @override
+  String get aiMiMoQuickThinking => '快速記帳深度思考';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 助手深度思考';
+
+  @override
+  String get speechClientError => '系統語音服務無法啟動，請檢查裝置的預設語音服務設定或切換雲端 AI。';
+
+  @override
+  String get speechLanguageUnsupported => '系統語音服務不支援目前語言，請檢查語音服務設定或切換雲端 AI。';
+
+  @override
+  String get speechLanguageUnavailable => '系統語音服務尚未提供目前語言的辨識能力，請檢查設定或切換雲端 AI。';
+
+  @override
+  String get speechServerError => '系統語音服務暫時無法使用，請稍後重試。';
 }

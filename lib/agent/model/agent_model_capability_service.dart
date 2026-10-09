@@ -102,7 +102,7 @@ final class AgentModelCapabilityService {
   static String fingerprint(AIServiceProviderConfig config) {
     final credentialDigest = sha256.convert(utf8.encode(config.apiKey));
     final protocolSettings = config.isXiaomiMiMo
-        ? '\n${config.dialect.name}\n${config.thinkingEnabled}'
+        ? '\n${config.dialect.name}\n${config.assistantThinkingEnabled}'
         : '';
     return base64Url.encode(utf8.encode(
       '${config.baseUrl}\n${config.textModel}\n$credentialDigest$protocolSettings',

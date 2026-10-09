@@ -8331,4 +8331,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get billingManualAction => '수동 기록';
+
+  @override
+  String get aiMiMoQuickThinking => '빠른 기록 깊은 사고';
+
+  @override
+  String get aiMiMoAssistantThinking => 'AI 어시스턴트 깊은 사고';
+
+  @override
+  String get speechClientError => '시스템 음성 서비스를 시작할 수 없습니다. 기본 음성 서비스 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechLanguageUnsupported => '음성 서비스가 이 언어를 지원하지 않습니다. 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechLanguageUnavailable => '이 언어의 음성 인식 기능을 사용할 수 없습니다. 설정을 확인하거나 클라우드 AI를 사용하세요.';
+
+  @override
+  String get speechServerError => '시스템 음성 서비스를 일시적으로 사용할 수 없습니다. 나중에 다시 시도하세요.';
 }

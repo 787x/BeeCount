@@ -11,6 +11,10 @@ import 'package:beecount/utils/website_urls.dart';
 /// - 路径为 `/docs/cloud-sync/<topic>`;
 /// - embed 参数齐全:embed=1 + theme(dark/light) + primary(主题色 hex)。
 void main() {
+  test('MiMo API key link targets its console', () {
+    expect(WebsiteUrls.xiaomiMiMoApiKeys,
+        'https://platform.xiaomimimo.com/console/api-keys');
+  });
   group('WebsiteUrls.docsCloudSyncEmbed', () {
     test('中文无前缀 + supabase topic + 浅色', () {
       final url = WebsiteUrls.docsCloudSyncEmbed(

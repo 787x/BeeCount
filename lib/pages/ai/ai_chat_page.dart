@@ -11,6 +11,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:uuid/uuid.dart';
 
 import '../../widgets/ai/speech_input_button.dart';
+import '../../widgets/ai/assistant_thinking_control.dart';
 import '../../widgets/ui/ui.dart';
 import '../../widgets/ai/typewriter_text.dart';
 import '../../widgets/ai/agent_reasoning_panel.dart';
@@ -401,6 +402,9 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
             ),
           ),
 
+          Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AssistantThinkingControl(enabled: !_isLoading)),
           // 输入区域
           _buildInputArea(),
         ],

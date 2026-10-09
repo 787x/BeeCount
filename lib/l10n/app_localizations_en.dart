@@ -8331,4 +8331,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingManualAction => 'Manual entry';
+
+  @override
+  String get aiMiMoQuickThinking => 'Quick billing Thinking';
+
+  @override
+  String get aiMiMoAssistantThinking => 'Assistant Thinking';
+
+  @override
+  String get speechClientError => 'The system speech service could not start. Check the default speech service settings or use cloud AI.';
+
+  @override
+  String get speechLanguageUnsupported => 'The speech service does not support this language. Check its settings or use cloud AI.';
+
+  @override
+  String get speechLanguageUnavailable => 'Recognition for this language is not available. Check the speech service settings or use cloud AI.';
+
+  @override
+  String get speechServerError => 'The system speech service is temporarily unavailable. Try again later.';
 }

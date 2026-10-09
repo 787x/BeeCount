@@ -23,6 +23,7 @@ import 'package:beecount/services/ai/ai_chat_service.dart';
 import 'package:beecount/services/ai/agent_app_facade.dart';
 import 'package:beecount/services/billing/bill_creation_service.dart';
 import 'package:beecount/utils/speech_input_helper.dart';
+import 'package:beecount/widgets/ai/assistant_thinking_control.dart';
 import 'package:beecount/widgets/ai/agent_brand_mark.dart';
 import 'package:beecount/widgets/ai/agent_execution_timeline.dart';
 import 'package:beecount/widgets/ai/agent_markdown_text.dart';
@@ -106,6 +107,34 @@ void main() {
   }
 
   testWidgets(
+      'Chat exposes persisted MiMo Assistant Thinking without clearing draft',
+      (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        'ai_capability_binding_v2',
+        jsonEncode(
+            const AICapabilityBinding(textProviderId: 'xiaomi_mimo').toJson()));
+    await repository.createLedger(name: '当前账本');
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('assistant-thinking-toggle')),
+        findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, 'draft');
+    await tester.tap(find.byKey(const ValueKey('assistant-thinking-toggle')));
+    await tester.pumpAndSettle();
+    final providers = jsonDecode(prefs.getString('ai_providers_v2')!) as List;
+    final provider =
+        providers.firstWhere((e) => e['id'] == 'xiaomi_mimo') as Map;
+    expect(provider['assistantThinkingEnabled'], false);
+    expect(provider['thinkingEnabled'], true);
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        'draft');
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets(
       'Chat microphone preserves draft and does not send; cancel keeps input',
       (tester) async {
     await repository.createLedger(name: '当前账本');
@@ -132,6 +161,11 @@ void main() {
   });
 
   testWidgets('reasoning 流式显示、完整保存并默认折叠，复制仅包含最终正文', (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        'ai_capability_binding_v2',
+        jsonEncode(
+            const AICapabilityBinding(textProviderId: 'xiaomi_mimo').toJson()));
     await repository.createLedger(name: '当前账本');
     String? copied;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -154,6 +188,12 @@ void main() {
         tester
             .widget<IconButton>(find.byKey(const ValueKey('speech-input-mic')))
             .onPressed,
+        isNull);
+    expect(
+        tester
+            .widget<FilterChip>(
+                find.byKey(const ValueKey('assistant-thinking-toggle')))
+            .onSelected,
         isNull);
     model.request!.nativeStreamSink
         ?.call(const core.AgentNativeReasoningDelta('第一段思考'));

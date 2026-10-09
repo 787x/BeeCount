@@ -3582,5 +3582,11 @@
   "speechInputAction": "Voice input",
   "speechCloudSilenceHint": "Silence timeout only affects automatic cloud recording. System recognition detects the end of speech itself.",
   "billingQuickActions": "Quick bookkeeping",
-  "billingManualAction": "Manual entry"
+  "billingManualAction": "Manual entry",
+  "aiMiMoQuickThinking": "Quick billing Thinking",
+  "aiMiMoAssistantThinking": "Assistant Thinking",
+  "speechClientError": "The system speech service could not start. Check the default speech service settings or use cloud AI.",
+  "speechLanguageUnsupported": "The speech service does not support this language. Check its settings or use cloud AI.",
+  "speechLanguageUnavailable": "Recognition for this language is not available. Check the speech service settings or use cloud AI.",
+  "speechServerError": "The system speech service is temporarily unavailable. Try again later."
 }

@@ -3010,5 +3010,11 @@
   "speechInputAction": "語音輸入",
   "speechCloudSilenceHint": "靜音時間僅影響雲端自動錄音；系統辨識自行判斷說話結束。",
   "billingQuickActions": "快捷記帳",
-  "billingManualAction": "手動記帳"
+  "billingManualAction": "手動記帳",
+  "aiMiMoQuickThinking": "快速記帳深度思考",
+  "aiMiMoAssistantThinking": "AI 助手深度思考",
+  "speechClientError": "系統語音服務無法啟動，請檢查裝置的預設語音服務設定或切換雲端 AI。",
+  "speechLanguageUnsupported": "系統語音服務不支援目前語言，請檢查語音服務設定或切換雲端 AI。",
+  "speechLanguageUnavailable": "系統語音服務尚未提供目前語言的辨識能力，請檢查設定或切換雲端 AI。",
+  "speechServerError": "系統語音服務暫時無法使用，請稍後重試。"
 }

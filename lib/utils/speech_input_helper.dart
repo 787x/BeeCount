@@ -44,47 +44,58 @@ class SpeechInputHelper {
           Platform.isAndroid && mode != SpeechRecognitionMode.cloud
               ? await bridge.availability()
               : (system: false, onDevice: false);
-      // Local recognition never depends on a cloud speech binding.
-      final needsCloud = mode == SpeechRecognitionMode.cloud ||
-          mode == SpeechRecognitionMode.auto &&
-              !availability.onDevice &&
-              !availability.system;
-      final provider = needsCloud
-          ? await AIProviderManager.getProviderForCapability(
-              AICapabilityType.speech)
-          : null;
-      final engine = selectSpeechEngine(mode,
-          onDeviceAvailable: availability.onDevice,
-          systemAvailable: availability.system,
-          cloudAvailable:
-              provider?.isValid == true && provider?.supportsSpeech == true);
-      if (!context.mounted || !await _permission(context)) return null;
       if (!context.mounted) return null;
+      var permissionGranted = false;
       final settings = ref.read(voiceBillingSettingsProvider);
-      if (engine != SpeechEngine.cloud) {
-        return await showDialog<String>(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => AndroidSpeechDialog(
-                bridge: bridge,
-                engine: engine,
-                language: Localizations.localeOf(context).toLanguageTag(),
-                triggerMode: settings.triggerMode));
-      }
-      final temp = await getTemporaryDirectory();
-      if (!context.mounted) return null;
-      // Keep session resources stable even if the dialog builder runs again.
-      final recorder = AudioRecorder();
-      final audioPath =
-          '${temp.path}/voice_${DateTime.now().microsecondsSinceEpoch}.wav';
-      return await showDialog<String>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => _CloudRecordingDialog(
-              recorder: recorder,
-              audioPath: audioPath,
-              triggerMode: settings.triggerMode,
-              silenceTimeoutMs: settings.silenceTimeoutMs));
+      return await recognizeSpeech(
+        mode: mode,
+        onDeviceAvailable: availability.onDevice,
+        systemAvailable: availability.system,
+        cloudAvailable: () async {
+          final provider = await AIProviderManager.getProviderForCapability(
+              AICapabilityType.speech);
+          return provider?.isValid == true && provider?.supportsSpeech == true;
+        },
+        listen: (engine) async {
+          if (!context.mounted) return null;
+          if (!permissionGranted) {
+            if (!await _permission(context) || !context.mounted) return null;
+            permissionGranted = true;
+          }
+          if (engine != SpeechEngine.cloud) {
+            final locale = Localizations.localeOf(context);
+            // Region-less app locales are not necessarily supported by the ROM's service.
+            final language = locale.countryCode?.isNotEmpty == true
+                ? locale.toLanguageTag()
+                : '';
+            final sessionBridge = AndroidSpeechRecognition();
+            final result = await showDialog<Object?>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AndroidSpeechDialog(
+                    bridge: sessionBridge,
+                    engine: engine,
+                    language: language,
+                    triggerMode: settings.triggerMode,
+                    returnErrors: true));
+            if (result is SpeechInputException) throw result;
+            return result as String?;
+          }
+          final temp = await getTemporaryDirectory();
+          if (!context.mounted) return null;
+          final recorder = AudioRecorder();
+          final audioPath =
+              '${temp.path}/voice_${DateTime.now().microsecondsSinceEpoch}.wav';
+          return showDialog<String>(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => _CloudRecordingDialog(
+                  recorder: recorder,
+                  audioPath: audioPath,
+                  triggerMode: settings.triggerMode,
+                  silenceTimeoutMs: settings.silenceTimeoutMs));
+        },
+      );
     } on SpeechInputException catch (error) {
       if (context.mounted && error.code != 'cancelled') {
         showToast(context, speechErrorMessage(l10n, error.code));

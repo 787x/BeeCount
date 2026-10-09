@@ -3506,5 +3506,11 @@
   "speechInputAction": "语音输入",
   "speechCloudSilenceHint": "静音时长仅影响云端自动录音；系统识别自行判断说话结束。",
   "billingQuickActions": "快捷记账",
-  "billingManualAction": "手动记账"
+  "billingManualAction": "手动记账",
+  "aiMiMoQuickThinking": "快速记账深度思考",
+  "aiMiMoAssistantThinking": "AI 助手深度思考",
+  "speechClientError": "系统语音服务无法启动，请检查设备的默认语音服务设置或切换云端 AI。",
+  "speechLanguageUnsupported": "系统语音服务不支持当前语言，请检查语音服务设置或切换云端 AI。",
+  "speechLanguageUnavailable": "系统语音服务尚未提供当前语言的识别能力，请检查语音服务设置或切换云端 AI。",
+  "speechServerError": "系统语音服务暂时不可用，请稍后重试。"
 }

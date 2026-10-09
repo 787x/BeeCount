@@ -14,6 +14,14 @@ String speechErrorMessage(AppLocalizations l10n, String code) => switch (code) {
       'network' => l10n.speechNetworkError,
       'cloud_unavailable' => l10n.speechCloudUnavailable,
       'unavailable' => l10n.speechUnavailable,
+      'client' => l10n.speechClientError,
+      'language_unsupported' => l10n.speechLanguageUnsupported,
+      'language_unavailable' => l10n.speechLanguageUnavailable,
+      'too_many_requests' => l10n.speechBusy,
+      'server' => l10n.speechServerError,
+      'support_unavailable' ||
+      'download_events_unavailable' =>
+        l10n.speechSystemUnavailable,
       _ => l10n.speechRecognitionFailed,
     };
 
@@ -21,12 +29,14 @@ class AndroidSpeechDialog extends StatefulWidget {
   final AndroidSpeechRecognition bridge;
   final SpeechEngine engine;
   final String language;
+  final bool returnErrors;
   final VoiceTriggerMode triggerMode;
   const AndroidSpeechDialog(
       {super.key,
       required this.bridge,
       required this.engine,
       required this.language,
+      this.returnErrors = false,
       required this.triggerMode});
   @override
   State<AndroidSpeechDialog> createState() => _AndroidSpeechDialogState();
@@ -63,6 +73,13 @@ class _AndroidSpeechDialogState extends State<AndroidSpeechDialog>
       _complete(text);
     } on SpeechInputException catch (error) {
       if (!mounted || _finished) return;
+      if (widget.returnErrors && error.code != 'cancelled') {
+        _complete(_stopping
+            ? SpeechInputException(error.code,
+                speechStarted: error.speechStarted, userStopped: true)
+            : error);
+        return;
+      }
       if (error.code != 'cancelled') {
         showToast(context,
             speechErrorMessage(AppLocalizations.of(context), error.code));
@@ -75,7 +92,7 @@ class _AndroidSpeechDialogState extends State<AndroidSpeechDialog>
     }
   }
 
-  void _complete([String? text]) {
+  void _complete([Object? text]) {
     if (!mounted || _finished) return;
     _finished = true;
     _timeout?.cancel();

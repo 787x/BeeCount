@@ -15781,6 +15781,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manual entry'**
   String get billingManualAction;
+
+  /// No description provided for @aiMiMoQuickThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick billing Thinking'**
+  String get aiMiMoQuickThinking;
+
+  /// No description provided for @aiMiMoAssistantThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant Thinking'**
+  String get aiMiMoAssistantThinking;
+
+  /// No description provided for @speechClientError.
+  ///
+  /// In en, this message translates to:
+  /// **'The system speech service could not start. Check the default speech service settings or use cloud AI.'**
+  String get speechClientError;
+
+  /// No description provided for @speechLanguageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'The speech service does not support this language. Check its settings or use cloud AI.'**
+  String get speechLanguageUnsupported;
+
+  /// No description provided for @speechLanguageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition for this language is not available. Check the speech service settings or use cloud AI.'**
+  String get speechLanguageUnavailable;
+
+  /// No description provided for @speechServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'The system speech service is temporarily unavailable. Try again later.'**
+  String get speechServerError;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

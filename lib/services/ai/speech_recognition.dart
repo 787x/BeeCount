@@ -12,7 +12,25 @@ enum SpeechEngine { onDevice, system, cloud }
 
 class SpeechInputException implements Exception {
   final String code;
-  const SpeechInputException(this.code);
+  final bool? speechStarted;
+  final bool userStopped;
+  const SpeechInputException(this.code,
+      {this.speechStarted, this.userStopped = false});
+
+  bool get canTryNextEngine =>
+      !userStopped &&
+      speechStarted == false &&
+      const {
+        'unavailable',
+        'on_device_unavailable',
+        'system_unavailable',
+        'client',
+        'language_unsupported',
+        'language_unavailable',
+        'network',
+        'server',
+        'support_unavailable',
+      }.contains(code);
 }
 
 SpeechRecognitionMode effectiveSpeechMode(String? saved,
@@ -108,7 +126,10 @@ class AndroidSpeechRecognition {
         'language': language,
       });
     } on PlatformException catch (error) {
-      throw SpeechInputException(error.code);
+      final details = error.details;
+      throw SpeechInputException(error.code,
+          speechStarted:
+              details is Map ? details['speechStarted'] as bool? : null);
     }
   }
 
@@ -116,4 +137,35 @@ class AndroidSpeechRecognition {
       channel.invokeMethod<void>('stopListening', {'sessionId': sessionId});
   Future<void> cancel() =>
       channel.invokeMethod<void>('cancelListening', {'sessionId': sessionId});
+}
+
+/// Runtime fallback is limited to definite initialization failures before speech.
+Future<String?> recognizeSpeech({
+  required SpeechRecognitionMode mode,
+  required bool onDeviceAvailable,
+  required bool systemAvailable,
+  required Future<bool> Function() cloudAvailable,
+  required Future<String?> Function(SpeechEngine) listen,
+}) async {
+  if (mode != SpeechRecognitionMode.auto) {
+    final engine = selectSpeechEngine(mode,
+        onDeviceAvailable: onDeviceAvailable,
+        systemAvailable: systemAvailable,
+        cloudAvailable: mode == SpeechRecognitionMode.cloud
+            ? await cloudAvailable()
+            : false);
+    return listen(engine);
+  }
+  for (final engine in [
+    if (onDeviceAvailable) SpeechEngine.onDevice,
+    if (systemAvailable) SpeechEngine.system,
+  ]) {
+    try {
+      return await listen(engine);
+    } on SpeechInputException catch (error) {
+      if (!error.canTryNextEngine) rethrow;
+    }
+  }
+  if (await cloudAvailable()) return listen(SpeechEngine.cloud);
+  throw const SpeechInputException('unavailable');
 }
