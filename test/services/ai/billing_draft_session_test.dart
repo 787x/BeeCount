@@ -15,9 +15,9 @@ void main() {
             ]),
         persist: (_, __) async => throw StateError('late failure'));
     await session.update(images: [BillingImageFiles(File('A'), File('A'))]);
-    await expectLater(session.confirm(), throwsStateError);
+    await expectLater(session.saveReady(), throwsStateError);
     expect(session.state, BillingDraftState.done);
-    expect(await session.confirm(), isNull);
+    expect(await session.saveReady(), isNull);
     await session.dispose();
   });
   test('draft parser preserves absent amount and time, validates associations',
@@ -62,7 +62,7 @@ void main() {
   });
 
   test(
-      'full reanalysis with text/voice/additional image writes zero; confirm exactly once',
+      'full reanalysis with text/voice/additional image writes zero; save ready exactly once',
       () async {
     var writes = 0;
     var attachments = 0;
@@ -92,15 +92,15 @@ void main() {
     expect(writes, 0);
     expect(attachments, 0);
     expect(session.state, BillingDraftState.ready);
-    final saving = session.confirm();
+    final saving = session.saveReady();
     expect(session.state, BillingDraftState.saving);
-    expect(await session.confirm(), isNull);
+    expect(await session.saveReady(), isNull);
     gate.complete(const BookkeepingResult(transactionIds: [1], failedCount: 1));
     await saving;
     expect(writes, 1);
     expect(attachments, 2);
     expect(session.state, BillingDraftState.done);
-    expect(await session.confirm(), isNull);
+    expect(await session.saveReady(), isNull);
     await session.dispose();
   });
 
@@ -137,7 +137,7 @@ void main() {
           BillingDraft(BillInfo(amount: 20, type: BillType.expense))
         ]));
         await work;
-        if (outcome == 'success') await session.confirm();
+        if (outcome == 'success') await session.saveReady();
       }
       await disposal;
       await session.dispose();

@@ -193,7 +193,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiConsentTitle => '开启 AI 功能前,请知悉';
 
   @override
-  String get aiConsentBody => 'AI 功能及语音输入可能由以下服务处理相关数据：\n\n• 文字与图片 AI：你配置的第三方 AI 服务商处理你主动提供的文字、账单图片，以及完成记账或分析所需的分类名称、账户名称和相关交易记录。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；已有用户保留原服务商选择。\n• Android 端侧语音：原始语音由设备端识别能力处理。\n• Android 系统语音：使用设备提供的系统语音识别服务，可能需要网络；音频如何处理取决于该系统服务，不一定由 BeeCount 中配置的 AI 服务商处理。\n• 云端 AI 语音：原始录音发送给 BeeCount 当前配置的语音服务商进行转写。\n\n识别后的文字：语音记账会将文字发送给配置的文本 AI 服务商完成记账；AI Chat 麦克风只将文字填入草稿，只有你确认并发送消息后才发送给文本 AI 服务商。云端转写在生成草稿前已发送录音，系统识别也可能在此之前联网。\n\n数据仅用于你主动发起的识别、记账与对话。相关服务按各自隐私政策处理数据。启用即表示你同意上述数据处理与共享。\n\n图片记账：主动选择的图片会发送给配置的视觉服务商。确认记账后，只有开启图片附件保存时，相关图片才保存到交易。\n\nAI 对话图片：主动添加的图片先发送给视觉服务商，生成的文字上下文再发送给文本服务商 / Agent；两种能力绑定不同服务商时，会涉及两个服务商。聊天原图不作为永久附件保存，不保存图片 Base64；为支持后续追问，图片的文字分析上下文会随消息在本地保存。';
+  String get aiConsentBody => 'AI 功能及语音输入可能由以下服务处理相关数据：\n\n• 文字与图片 AI：你配置的第三方 AI 服务商处理你主动提供的文字、账单图片，以及完成记账或分析所需的分类名称、账户名称和相关交易记录。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；已有用户保留原服务商选择。\n• Android 端侧语音：原始语音由设备端识别能力处理。\n• Android 系统语音：使用设备提供的系统语音识别服务，可能需要网络；音频如何处理取决于该系统服务，不一定由 BeeCount 中配置的 AI 服务商处理。\n• 云端 AI 语音：原始录音发送给 BeeCount 当前配置的语音服务商进行转写。\n\n识别后的文字：语音记账会将文字发送给配置的文本 AI 服务商完成记账；AI Chat 麦克风只将文字填入草稿，只有你确认并发送消息后才发送给文本 AI 服务商。云端转写在生成草稿前已发送录音，系统识别也可能在此之前联网。\n\n数据仅用于你主动发起的识别、记账与对话。相关服务按各自隐私政策处理数据。启用即表示你同意上述数据处理与共享。\n\n图片记账：主动选择的图片会发送给配置的视觉服务商。图片快速记账会在分析无关键歧义后自动保存交易；存在歧义时先请你补充信息。只有开启图片附件保存时，相关图片才随成功创建的交易保存。\n\nAI 对话图片：主动添加的图片先发送给视觉服务商，生成的文字上下文再发送给文本服务商 / Agent；两种能力绑定不同服务商时，会涉及两个服务商。聊天原图不作为永久附件保存，不保存图片 Base64；为支持后续追问，图片的文字分析上下文会随消息在本地保存。';
 
   @override
   String get aiConsentAgree => '同意并开启';
@@ -8343,7 +8343,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechServerError => '系统语音服务暂时不可用，请稍后重试。';
 
   @override
-  String get aiDraftTitle => '图片记账草稿';
+  String get aiDraftTitle => '补充记账信息';
 
   @override
   String get aiDraftAnalyzing => '正在联合分析图片…';
@@ -8392,6 +8392,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String aiDraftSaved(int saved, int failed) {
     return '已保存 $saved 笔，失败 $failed 笔';
   }
+
+  @override
+  String get aiDraftRetry => '重试分析';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -8435,7 +8438,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aiConsentTitle => '開啟 AI 功能前,請知悉';
 
   @override
-  String get aiConsentBody => 'AI 功能及語音輸入可能由以下服務處理相關資料：\n\n• 文字與圖片 AI：你設定的第三方 AI 服務商處理你主動提供的文字、帳單圖片，以及完成記帳或分析所需的分類名稱、帳戶名稱和相關交易紀錄。新安裝預設使用 Xiaomi MiMo（api.xiaomimimo.com，小米營運）；既有使用者保留原服務商選擇。\n• Android 裝置端語音：原始語音由裝置端辨識能力處理。\n• Android 系統語音：使用裝置提供的系統語音辨識服務，可能需要網路；音訊如何處理取決於該系統服務，不一定由 BeeCount 中設定的 AI 服務商處理。\n• 雲端 AI 語音：原始錄音傳送給 BeeCount 目前設定的語音服務商進行轉寫。\n\n辨識後的文字：語音記帳會將文字傳送給設定的文字 AI 服務商完成記帳；AI Chat 麥克風只將文字填入草稿，只有你確認並傳送訊息後才傳送給文字 AI 服務商。雲端轉寫在產生草稿前已傳送錄音，系統辨識也可能在此之前連線。\n\n資料僅用於你主動發起的辨識、記帳與對話。相關服務依各自隱私政策處理資料。啟用即表示你同意上述資料處理與共享。\n\n圖片記帳：主動選擇的圖片會傳送給設定的視覺服務商。確認記帳後，只有開啟圖片附件儲存時，相關圖片才儲存到交易。\n\nAI 對話圖片：主動新增的圖片先傳送給視覺服務商，產生的文字上下文再傳送給文字服務商 / Agent；兩種能力綁定不同服務商時，會涉及兩個服務商。聊天原圖不作為永久附件儲存，不儲存圖片 Base64；為支援後續追問，圖片的文字分析上下文會隨訊息在本機儲存。';
+  String get aiConsentBody => 'AI 功能及語音輸入可能由以下服務處理相關資料：\n\n• 文字與圖片 AI：你設定的第三方 AI 服務商處理你主動提供的文字、帳單圖片，以及完成記帳或分析所需的分類名稱、帳戶名稱和相關交易紀錄。新安裝預設使用 Xiaomi MiMo（api.xiaomimimo.com，小米營運）；既有使用者保留原服務商選擇。\n• Android 裝置端語音：原始語音由裝置端辨識能力處理。\n• Android 系統語音：使用裝置提供的系統語音辨識服務，可能需要網路；音訊如何處理取決於該系統服務，不一定由 BeeCount 中設定的 AI 服務商處理。\n• 雲端 AI 語音：原始錄音傳送給 BeeCount 目前設定的語音服務商進行轉寫。\n\n辨識後的文字：語音記帳會將文字傳送給設定的文字 AI 服務商完成記帳；AI Chat 麥克風只將文字填入草稿，只有你確認並傳送訊息後才傳送給文字 AI 服務商。雲端轉寫在產生草稿前已傳送錄音，系統辨識也可能在此之前連線。\n\n資料僅用於你主動發起的辨識、記帳與對話。相關服務依各自隱私政策處理資料。啟用即表示你同意上述資料處理與共享。\n\n圖片記帳：主動選擇的圖片會傳送給設定的視覺服務商。圖片快速記帳會在分析無關鍵歧義後自動儲存交易；存在歧義時先請你補充資訊。只有開啟圖片附件儲存時，相關圖片才隨成功建立的交易儲存。\n\nAI 對話圖片：主動新增的圖片先傳送給視覺服務商，產生的文字上下文再傳送給文字服務商 / Agent；兩種能力綁定不同服務商時，會涉及兩個服務商。聊天原圖不作為永久附件儲存，不儲存圖片 Base64；為支援後續追問，圖片的文字分析上下文會隨訊息在本機儲存。';
 
   @override
   String get aiConsentAgree => '同意並開啟';
@@ -16090,7 +16093,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get speechServerError => '系統語音服務暫時無法使用，請稍後重試。';
 
   @override
-  String get aiDraftTitle => '圖片記帳草稿';
+  String get aiDraftTitle => '補充記帳資訊';
 
   @override
   String get aiDraftAnalyzing => '正在聯合分析圖片…';
@@ -16139,4 +16142,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String aiDraftSaved(int saved, int failed) {
     return '已儲存 $saved 筆，失敗 $failed 筆';
   }
+
+  @override
+  String get aiDraftRetry => '重試分析';
 }

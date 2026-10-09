@@ -118,7 +118,7 @@ class AiBookkeeper {
   /// 仅语音转文字(快捷指令首步,不走提取)
   Future<String?> speechToText(File audio) => _engine.speechToText(audio);
 
-  /// Confirmed drafts reuse the normal persistence path and original source indexes.
+  /// Ready drafts reuse the normal persistence path and original source indexes.
   Future<BookkeepingResult> persistDrafts({
     required List<BillingDraft> drafts,
     required List<File> sourceImages,
