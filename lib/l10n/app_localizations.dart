@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiConsentBody.
   ///
   /// In en, this message translates to:
-  /// **'AI features and voice input may process related data through these services:\n\n• Text and image AI: the third-party AI provider you configure processes text and receipt images you provide, plus category names, account names and relevant transaction records needed for bookkeeping or analysis. New installations default to Xiaomi MiMo (api.xiaomimimo.com, operated by Xiaomi); existing users retain their provider selection.\n• Android on-device speech: raw speech is processed by the device\'s on-device recognition capability.\n• Android system speech: uses the device\'s system speech recognition service, which may need a network connection. How audio is processed depends on that service, which may differ from the AI provider configured in BeeCount.\n• Cloud AI speech: raw recordings are sent to BeeCount\'s currently configured speech provider for transcription.\n\nRecognized text: voice bookkeeping sends the text to your configured text AI provider for bookkeeping. The AI Chat microphone only fills a draft; text goes to the text AI provider only after you confirm and send the message. Cloud transcription uploads audio before the draft is generated, and system recognition may also access the network before then.\n\nData is used only for recognition, bookkeeping and conversations you initiate. Each service processes data under its own privacy policy. Enabling means you consent to the processing and sharing described above.'**
+  /// **'AI features and voice input may process related data through these services:\n\n• Text and image AI: the third-party AI provider you configure processes text and receipt images you provide, plus category names, account names and relevant transaction records needed for bookkeeping or analysis. New installations default to Xiaomi MiMo (api.xiaomimimo.com, operated by Xiaomi); existing users retain their provider selection.\n• Android on-device speech: raw speech is processed by the device\'s on-device recognition capability.\n• Android system speech: uses the device\'s system speech recognition service, which may need a network connection. How audio is processed depends on that service, which may differ from the AI provider configured in BeeCount.\n• Cloud AI speech: raw recordings are sent to BeeCount\'s currently configured speech provider for transcription.\n\nRecognized text: voice bookkeeping sends the text to your configured text AI provider for bookkeeping. The AI Chat microphone only fills a draft; text goes to the text AI provider only after you confirm and send the message. Cloud transcription uploads audio before the draft is generated, and system recognition may also access the network before then.\n\nData is used only for recognition, bookkeeping and conversations you initiate. Each service processes data under its own privacy policy. Enabling means you consent to the processing and sharing described above.\n\nImage bookkeeping: images you select are sent to your configured Vision Provider. Quick image bookkeeping saves transactions automatically once analysis has no consequential ambiguity; otherwise you are asked to clarify first. Related images are saved with successfully created transactions only when automatic image attachments are enabled.\n\nAI Chat images: selected images go to your Vision Provider; the derived text context then goes to your Text Provider / Agent. If these capabilities use different providers, both providers process data. Original chat images are not stored as permanent attachments, and image Base64 is not stored. Derived image text context may be stored locally with the message for follow-up conversations.'**
   String get aiConsentBody;
 
   /// No description provided for @aiConsentAgree.
@@ -15817,6 +15817,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The system speech service is temporarily unavailable. Try again later.'**
   String get speechServerError;
+
+  /// No description provided for @aiDraftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clarify image bookkeeping'**
+  String get aiDraftTitle;
+
+  /// No description provided for @aiDraftAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing images together…'**
+  String get aiDraftAnalyzing;
+
+  /// No description provided for @aiDraftNeedsInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Please clarify key information'**
+  String get aiDraftNeedsInput;
+
+  /// No description provided for @aiDraftReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply or correct the details'**
+  String get aiDraftReply;
+
+  /// No description provided for @aiImagesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add images'**
+  String get aiImagesAdd;
+
+  /// No description provided for @aiImagesCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take another photo'**
+  String get aiImagesCamera;
+
+  /// No description provided for @aiDraftConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm bookkeeping'**
+  String get aiDraftConfirm;
+
+  /// No description provided for @aiDraftModify.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify / clarify'**
+  String get aiDraftModify;
+
+  /// No description provided for @aiDraftSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get aiDraftSaving;
+
+  /// No description provided for @aiImagesUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This vision provider does not support joint analysis of multiple images. Please switch providers.'**
+  String get aiImagesUnsupported;
+
+  /// No description provided for @aiImageProcessingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image processing failed. Retry, remove images, or check your vision provider settings.'**
+  String get aiImageProcessingFailed;
+
+  /// No description provided for @aiImagesRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get aiImagesRemove;
+
+  /// No description provided for @aiImageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images'**
+  String aiImageCount(int count);
+
+  /// No description provided for @aiImagesSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {count} images'**
+  String aiImagesSent(int count);
+
+  /// No description provided for @aiDraftSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved}; failed {failed}'**
+  String aiDraftSaved(int saved, int failed);
+
+  /// No description provided for @aiDraftRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry analysis'**
+  String get aiDraftRetry;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

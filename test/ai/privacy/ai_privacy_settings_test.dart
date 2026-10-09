@@ -41,7 +41,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('accepting the notice stores version 2 and keeps AI enabled',
+  testWidgets('accepting the notice stores version 3 and keeps AI enabled',
       (tester) async {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
@@ -50,7 +50,7 @@ void main() {
     await tester.pumpAndSettle();
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('ai_bill_extraction_enabled'), isTrue);
-    expect(await AiPrivacyConsentStore.readVersion(), 2);
+    expect(await AiPrivacyConsentStore.readVersion(), 3);
     expect(await AiPrivacyConsentStore.isConsented(), isTrue);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));

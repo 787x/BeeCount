@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beecount/ai/core/ai_extraction_context.dart';
 import 'package:beecount/ai/core/ai_extraction_engine.dart';
 import 'package:beecount/ai/core/bill_info.dart';
+import 'package:beecount/ai/core/billing_draft.dart';
 import 'package:beecount/data/db.dart';
 import 'package:beecount/data/repositories/local/local_repository.dart';
 import 'package:beecount/services/ai/ai_bookkeeper.dart';
@@ -65,6 +66,96 @@ void main() {
 
   tearDown(() async {
     await db.close();
+  });
+
+  for (final sources in [
+    [
+      [0],
+      [0]
+    ],
+    [
+      [0, 1]
+    ],
+    [
+      [0],
+      [1, 2]
+    ],
+    [<int>[]]
+  ]) {
+    test(
+        'confirmed source mapping $sources uses actual transaction attachments',
+        () async {
+      final bookkeeper = AiBookkeeper(
+          repository: repo, engine: _FakeEngine(), persister: persister);
+      final result = await bookkeeper.persistDrafts(
+          drafts: [
+            for (final indexes in sources)
+              BillingDraft(const BillInfo(amount: 20, type: BillType.expense),
+                  sourceImageIndexes: indexes)
+          ],
+          sourceImages: [File('A'), File('B'), File('C')],
+          ledgerId: ledgerId,
+          billingTypes: const [],
+          fallbackTime: DateTime(2026, 10, 9),
+          saveAttachment: (id, source, index) async {
+            await repo.createAttachment(
+                transactionId: id, fileName: source.path, sortOrder: index);
+          });
+      for (var i = 0; i < sources.length; i++) {
+        final attachments =
+            await repo.getAttachmentsByTransaction(result.transactionIds[i]);
+        expect(
+            attachments.map((a) => a.fileName).toList(),
+            sources[i].isEmpty
+                ? ['A', 'B', 'C']
+                : sources[i].map((s) => ['A', 'B', 'C'][s]).toList());
+      }
+    });
+  }
+
+  test('preceding persistence failure does not shift attachment mapping',
+      () async {
+    final bookkeeper = AiBookkeeper(
+        repository: repo,
+        engine: _FakeEngine(),
+        persister: _FailFirstPersister(repo));
+    final result = await bookkeeper.persistDrafts(
+        drafts: const [
+          BillingDraft(BillInfo(amount: 20, type: BillType.expense),
+              sourceImageIndexes: [0]),
+          BillingDraft(BillInfo(amount: 30, type: BillType.expense),
+              sourceImageIndexes: [1])
+        ],
+        sourceImages: [File('A'), File('B')],
+        ledgerId: ledgerId,
+        billingTypes: const [],
+        fallbackTime: DateTime(2026, 10, 9),
+        saveAttachment: (id, source, index) async {
+          await repo.createAttachment(
+              transactionId: id, fileName: source.path, sortOrder: index);
+        });
+    expect(result.failedCount, 1);
+    expect(result.savedCount, 1);
+    expect(
+        (await repo.getAttachmentsByTransaction(result.firstTransactionId!))
+            .single
+            .fileName,
+        'B');
+  });
+
+  test('no attachment callback creates only transactions', () async {
+    final bookkeeper = AiBookkeeper(
+        repository: repo, engine: _FakeEngine(), persister: persister);
+    final result = await bookkeeper.persistDrafts(
+        drafts: const [
+          BillingDraft(BillInfo(amount: 20, type: BillType.expense))
+        ],
+        sourceImages: [File('A')],
+        ledgerId: ledgerId,
+        billingTypes: const [],
+        fallbackTime: DateTime(2026, 10, 9));
+    expect(result.success, true);
+    expect(await repo.getAllAttachments(), isEmpty);
   });
 
   group('AiBookkeeper.fromText', () {
@@ -219,4 +310,24 @@ void main() {
       expect(response.recognizedText, '午餐30块');
     });
   });
+}
+
+class _FailFirstPersister extends BillCreationService {
+  _FailFirstPersister(super.repo);
+  bool first = true;
+  @override
+  Future<int?> createFromBill(
+      {required BillInfo bill,
+      required int ledgerId,
+      List<String>? billingTypes,
+      List<String>? customTagNames,
+      dynamic l10n,
+      bool autoAddTags = true}) async {
+    if (first) {
+      first = false;
+      return null;
+    }
+    return super.createFromBill(
+        bill: bill, ledgerId: ledgerId, billingTypes: billingTypes);
+  }
 }

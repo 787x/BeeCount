@@ -4,9 +4,13 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../utils/image_file_info.dart';
+
+final billingImageServiceProvider =
+    Provider<BillingImageService>((ref) => BillingImageService());
 
 /// 图片附件与 AI 识别图片分别管理，避免识别压缩损失附件原图。
 class BillingImageFiles {
@@ -47,6 +51,16 @@ class BillingImageService {
       imageQuality: keepOriginal ? null : quality,
     );
     return image == null ? null : File(image.path);
+  }
+
+  /// Gallery selection retains picker order.
+  Future<List<File>> pickImages({required bool keepOriginal}) async {
+    final images = await _picker.pickMultiImage(
+      maxWidth: keepOriginal ? null : maxDimension.toDouble(),
+      maxHeight: keepOriginal ? null : maxDimension.toDouble(),
+      imageQuality: keepOriginal ? null : quality,
+    );
+    return images.map((image) => File(image.path)).toList();
   }
 
   Future<BillingImageFiles> prepare(File file,

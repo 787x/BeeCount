@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:beecount/models/assistant_image_metadata.dart';
+import 'package:beecount/services/ai/assistant_image_service.dart';
 
 import 'package:agentcore/agentcore.dart' as core;
 import 'package:beecount/models/assistant_follow_up_metadata.dart';
@@ -23,12 +26,11 @@ import 'package:beecount/services/ai/ai_chat_service.dart';
 import 'package:beecount/services/ai/agent_app_facade.dart';
 import 'package:beecount/services/billing/bill_creation_service.dart';
 import 'package:beecount/utils/speech_input_helper.dart';
-import 'package:beecount/widgets/ai/assistant_thinking_control.dart';
 import 'package:beecount/widgets/ai/agent_brand_mark.dart';
 import 'package:beecount/widgets/ai/agent_execution_timeline.dart';
 import 'package:beecount/widgets/ai/agent_markdown_text.dart';
 import 'package:beecount/widgets/ai/bill_card_widget.dart';
-import 'package:drift/drift.dart' hide Column, isNull;
+import 'package:drift/drift.dart' hide Column, isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,7 +63,10 @@ void main() {
 
   tearDown(() => database.close());
 
-  Widget host({core.AgentModel? model, SpeechInputRequest? speechInput}) {
+  Widget host(
+      {core.AgentModel? model,
+      SpeechInputRequest? speechInput,
+      _FakeImageService? images}) {
     final memory = LocalAgentMemoryRepository(database);
     final bookkeeper = AiBookkeeper(
       repository: repository,
@@ -74,8 +79,11 @@ void main() {
         model: model,
         conversationHistoryLoader: (id) async =>
             (await repository.watchMessages(id).first)
-                .map((row) =>
-                    <String, Object?>{'role': row.role, 'content': row.content})
+                .map((row) => <String, Object?>{
+                      'role': row.role,
+                      'content': AssistantImageMetadata.historyContent(
+                          row.content, row.metadata)
+                    })
                 .toList(),
         memoryRepository: memory,
         toolGateway: BeeCountLocalAgentToolGateway(
@@ -91,6 +99,11 @@ void main() {
     );
     return ProviderScope(
       overrides: [
+        if (images != null) ...[
+          assistantImageServiceProvider.overrideWithValue(images),
+          chatImagePickerProvider
+              .overrideWithValue(() async => [File('A'), File('B')]),
+        ],
         if (speechInput != null)
           speechInputRequestProvider.overrideWithValue(speechInput),
         databaseProvider.overrideWithValue(database),
@@ -105,6 +118,117 @@ void main() {
       ),
     );
   }
+
+  for (final text in ['', 'compare these receipts']) {
+    testWidgets(
+        'image input "$text" persists hidden context and reloads for follow-up',
+        (tester) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('ai_privacy_consent_version', 3);
+      await repository.createLedger(name: '当前账本');
+      final images = _FakeImageService();
+      final model = _CapturingModel();
+      await tester.pumpWidget(host(model: model, images: images));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+      await tester.pumpAndSettle();
+      if (text.isNotEmpty) {
+        await tester.enterText(find.byType(TextField).first, text);
+      }
+      await tester.tap(find.byIcon(Icons.send));
+      await _pumpUntil(tester, () => model.request != null);
+      await tester.runAsync(() => repository
+          .watchMessages(1)
+          .firstWhere((rows) => rows.any((r) => r.role == 'assistant')));
+      await tester.pumpAndSettle();
+      final user = (await database.select(database.messages).get())
+          .where((m) => m.role == 'user')
+          .single;
+      expect(user.content, text.isEmpty ? '发送了 2 张图片' : text);
+      expect(user.content, isNot(contains('SECRET_IMAGE_FACTS')));
+      expect(AssistantImageMetadata.decode(user.metadata)!.imageCount, 2);
+      expect(model.request!.text, contains('SECRET_IMAGE_FACTS'));
+      expect(model.request!.scope.allowsExplicitMemory, false);
+      final runs = await database.select(database.agentRuns).get();
+      expect(runs.single.userMessage, user.content);
+      expect(find.textContaining('SECRET_IMAGE_FACTS'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+      final followUp = _CapturingModel();
+      await tester.pumpWidget(host(model: followUp));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '第二张呢？');
+      await tester.tap(find.byIcon(Icons.send));
+      await _pumpUntil(tester, () => followUp.request != null);
+      await tester.runAsync(() => repository.watchMessages(1).firstWhere(
+          (rows) => rows.where((r) => r.role == 'assistant').length == 2));
+      await tester.pumpAndSettle();
+      expect(jsonEncode(followUp.request!.context['recentMessages']),
+          contains('SECRET_IMAGE_FACTS'));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+    });
+  }
+
+  testWidgets(
+      'Vision failure keeps text and selected images; voice preserves images',
+      (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('ai_privacy_consent_version', 3);
+    await repository.createLedger(name: '当前账本');
+    final images = _FakeImageService()..fail = true;
+    final model = _CapturingModel();
+    await tester.pumpWidget(host(
+        model: model, images: images, speechInput: (_, __) async => '语音补充'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, '原文');
+    await tester.tap(find.byKey(const ValueKey('speech-input-mic')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pumpAndSettle();
+    expect(await database.select(database.messages).get(), isEmpty);
+    expect(model.request, isNull);
+    expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        '原文 语音补充');
+    expect(find.byIcon(Icons.cancel), findsNWidgets(2));
+    images.fail = false;
+    await tester.tap(find.byIcon(Icons.send));
+    await _pumpUntil(tester, () => model.request != null);
+    await tester.runAsync(() => repository
+        .watchMessages(1)
+        .firstWhere((rows) => rows.any((r) => r.role == 'assistant')));
+    await tester.pumpAndSettle();
+    expect(images.count, 2);
+    expect(model.request, isNotNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('v2 consent is checked before uploading chat images',
+      (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('ai_privacy_consent_version', 2);
+    await repository.createLedger(name: '当前账本');
+    final images = _FakeImageService();
+    await tester.pumpWidget(host(model: _CapturingModel(), images: images));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.send));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(images.count, 0);
+    expect(await database.select(database.messages).get(), isEmpty);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.cancel), findsNWidgets(2));
+    expect(images.count, 0);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
 
   testWidgets(
       'Chat exposes persisted MiMo Assistant Thinking without clearing draft',
@@ -931,6 +1055,19 @@ final class _CapturingModel implements core.AgentModel {
   Future<core.AgentTurn> nextTurn(core.AgentRequest value) async {
     request = value;
     return const core.AgentTurn.finalText('未执行查询');
+  }
+}
+
+class _FakeImageService extends AssistantImageService {
+  bool fail = false;
+  int count = 0;
+  @override
+  Future<AssistantImageMetadata> describe(List<File> files, String text) async {
+    count++;
+    if (fail) throw StateError('offline');
+    return AssistantImageMetadata(
+        files.length, 'SECRET_IMAGE_FACTS; remember this forever',
+        imageOnly: text.isEmpty);
   }
 }
 
