@@ -193,7 +193,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiConsentTitle => 'Before enabling AI features';
 
   @override
-  String get aiConsentBody => 'AI features and voice input may process related data through these services:\n\n• Text and image AI: the third-party AI provider you configure processes text and receipt images you provide, plus category names, account names and relevant transaction records needed for bookkeeping or analysis. New installations default to Xiaomi MiMo (api.xiaomimimo.com, operated by Xiaomi); existing users retain their provider selection.\n• Android on-device speech: raw speech is processed by the device\'s on-device recognition capability.\n• Android system speech: uses the device\'s system speech recognition service, which may need a network connection. How audio is processed depends on that service, which may differ from the AI provider configured in BeeCount.\n• Cloud AI speech: raw recordings are sent to BeeCount\'s currently configured speech provider for transcription.\n\nRecognized text: voice bookkeeping sends the text to your configured text AI provider for bookkeeping. The AI Chat microphone only fills a draft; text goes to the text AI provider only after you confirm and send the message. Cloud transcription uploads audio before the draft is generated, and system recognition may also access the network before then.\n\nData is used only for recognition, bookkeeping and conversations you initiate. Each service processes data under its own privacy policy. Enabling means you consent to the processing and sharing described above.';
+  String get aiConsentBody => 'AI features and voice input may process related data through these services:\n\n• Text and image AI: the third-party AI provider you configure processes text and receipt images you provide, plus category names, account names and relevant transaction records needed for bookkeeping or analysis. New installations default to Xiaomi MiMo (api.xiaomimimo.com, operated by Xiaomi); existing users retain their provider selection.\n• Android on-device speech: raw speech is processed by the device\'s on-device recognition capability.\n• Android system speech: uses the device\'s system speech recognition service, which may need a network connection. How audio is processed depends on that service, which may differ from the AI provider configured in BeeCount.\n• Cloud AI speech: raw recordings are sent to BeeCount\'s currently configured speech provider for transcription.\n\nRecognized text: voice bookkeeping sends the text to your configured text AI provider for bookkeeping. The AI Chat microphone only fills a draft; text goes to the text AI provider only after you confirm and send the message. Cloud transcription uploads audio before the draft is generated, and system recognition may also access the network before then.\n\nData is used only for recognition, bookkeeping and conversations you initiate. Each service processes data under its own privacy policy. Enabling means you consent to the processing and sharing described above.\n\nImage bookkeeping: images you select are sent to your configured Vision Provider. Related images are saved to transactions only after you confirm bookkeeping and only when automatic image attachments are enabled.\n\nAI Chat images: selected images go to your Vision Provider; the derived text context then goes to your Text Provider / Agent. If these capabilities use different providers, both providers process data. Original chat images are not stored as permanent attachments, and image Base64 is not stored. Derived image text context may be stored locally with the message for follow-up conversations.';
 
   @override
   String get aiConsentAgree => 'Agree & enable';
@@ -8349,4 +8349,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechServerError => 'The system speech service is temporarily unavailable. Try again later.';
+
+  @override
+  String get aiDraftTitle => 'Image bookkeeping drafts';
+
+  @override
+  String get aiDraftAnalyzing => 'Analyzing images together…';
+
+  @override
+  String get aiDraftNeedsInput => 'Please clarify key information';
+
+  @override
+  String get aiDraftReply => 'Reply or correct the details';
+
+  @override
+  String get aiImagesAdd => 'Add images';
+
+  @override
+  String get aiImagesCamera => 'Take another photo';
+
+  @override
+  String get aiDraftConfirm => 'Confirm bookkeeping';
+
+  @override
+  String get aiDraftModify => 'Modify / clarify';
+
+  @override
+  String get aiDraftSaving => 'Saving…';
+
+  @override
+  String get aiImagesUnsupported => 'This vision provider does not support joint analysis of multiple images. Please switch providers.';
+
+  @override
+  String get aiImageProcessingFailed => 'Image processing failed. Retry, remove images, or check your vision provider settings.';
+
+  @override
+  String get aiImagesRemove => 'Remove image';
+
+  @override
+  String aiImageCount(int count) {
+    return '$count images';
+  }
+
+  @override
+  String aiImagesSent(int count) {
+    return 'Sent $count images';
+  }
+
+  @override
+  String aiDraftSaved(int saved, int failed) {
+    return 'Saved $saved; failed $failed';
+  }
 }

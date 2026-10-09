@@ -66,7 +66,7 @@
   "agentFollowUpOverviewPrompt": "查询 {range} 的总收入、总支出和结余。",
   "@agentFollowUpOverviewPrompt": {"placeholders":{"range":{"type":"String"}}},
   "aiConsentTitle": "开启 AI 功能前,请知悉",
-  "aiConsentBody": "AI 功能及语音输入可能由以下服务处理相关数据：\n\n• 文字与图片 AI：你配置的第三方 AI 服务商处理你主动提供的文字、账单图片，以及完成记账或分析所需的分类名称、账户名称和相关交易记录。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；已有用户保留原服务商选择。\n• Android 端侧语音：原始语音由设备端识别能力处理。\n• Android 系统语音：使用设备提供的系统语音识别服务，可能需要网络；音频如何处理取决于该系统服务，不一定由 BeeCount 中配置的 AI 服务商处理。\n• 云端 AI 语音：原始录音发送给 BeeCount 当前配置的语音服务商进行转写。\n\n识别后的文字：语音记账会将文字发送给配置的文本 AI 服务商完成记账；AI Chat 麦克风只将文字填入草稿，只有你确认并发送消息后才发送给文本 AI 服务商。云端转写在生成草稿前已发送录音，系统识别也可能在此之前联网。\n\n数据仅用于你主动发起的识别、记账与对话。相关服务按各自隐私政策处理数据。启用即表示你同意上述数据处理与共享。",
+  "aiConsentBody": "AI 功能及语音输入可能由以下服务处理相关数据：\n\n• 文字与图片 AI：你配置的第三方 AI 服务商处理你主动提供的文字、账单图片，以及完成记账或分析所需的分类名称、账户名称和相关交易记录。新安装默认使用 Xiaomi MiMo（api.xiaomimimo.com，小米运营）；已有用户保留原服务商选择。\n• Android 端侧语音：原始语音由设备端识别能力处理。\n• Android 系统语音：使用设备提供的系统语音识别服务，可能需要网络；音频如何处理取决于该系统服务，不一定由 BeeCount 中配置的 AI 服务商处理。\n• 云端 AI 语音：原始录音发送给 BeeCount 当前配置的语音服务商进行转写。\n\n识别后的文字：语音记账会将文字发送给配置的文本 AI 服务商完成记账；AI Chat 麦克风只将文字填入草稿，只有你确认并发送消息后才发送给文本 AI 服务商。云端转写在生成草稿前已发送录音，系统识别也可能在此之前联网。\n\n数据仅用于你主动发起的识别、记账与对话。相关服务按各自隐私政策处理数据。启用即表示你同意上述数据处理与共享。\n\n图片记账：主动选择的图片会发送给配置的视觉服务商。确认记账后，只有开启图片附件保存时，相关图片才保存到交易。\n\nAI 对话图片：主动添加的图片先发送给视觉服务商，生成的文字上下文再发送给文本服务商 / Agent；两种能力绑定不同服务商时，会涉及两个服务商。聊天原图不作为永久附件保存，不保存图片 Base64；为支持后续追问，图片的文字分析上下文会随消息在本地保存。",
   "aiConsentAgree": "同意并开启",
   "aboutPrivacyPolicy": "隐私政策",
   "aboutChangelog": "更新日志",
@@ -3512,5 +3512,44 @@
   "speechClientError": "系统语音服务无法启动，请检查设备的默认语音服务设置或切换云端 AI。",
   "speechLanguageUnsupported": "系统语音服务不支持当前语言，请检查语音服务设置或切换云端 AI。",
   "speechLanguageUnavailable": "系统语音服务尚未提供当前语言的识别能力，请检查语音服务设置或切换云端 AI。",
-  "speechServerError": "系统语音服务暂时不可用，请稍后重试。"
+  "speechServerError": "系统语音服务暂时不可用，请稍后重试。",
+  "aiDraftTitle": "图片记账草稿",
+  "aiDraftAnalyzing": "正在联合分析图片…",
+  "aiDraftNeedsInput": "请补充关键信息",
+  "aiDraftReply": "回答或修改说明",
+  "aiImagesAdd": "添加图片",
+  "aiImagesCamera": "补拍图片",
+  "aiDraftConfirm": "确认记账",
+  "aiDraftModify": "修改 / 补充",
+  "aiDraftSaving": "正在保存…",
+  "aiImagesUnsupported": "当前视觉服务商暂不支持一次分析多张图片，请切换服务商。",
+  "aiImageProcessingFailed": "图片处理失败，请重试、移除图片或检查视觉服务商配置。",
+  "aiImagesRemove": "移除图片",
+  "aiImageCount": "{count} 张图片",
+  "@aiImageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiImagesSent": "发送了 {count} 张图片",
+  "@aiImagesSent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiDraftSaved": "已保存 {saved} 笔，失败 {failed} 笔",
+  "@aiDraftSaved": {
+    "placeholders": {
+      "saved": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  }
 }

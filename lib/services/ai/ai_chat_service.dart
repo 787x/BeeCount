@@ -1,4 +1,5 @@
 import 'package:agentcore/agentcore.dart' show AgentPromptSuggestion;
+import '../../models/assistant_image_metadata.dart';
 
 import '../../ai/core/bill_info.dart';
 import '../../agent/permission/agent_authorization_gate.dart';
@@ -82,13 +83,18 @@ class AIChatService {
     String? languageCode,
     AppLocalizations? l10n,
     bool readOnly = false,
+    AssistantImageMetadata? imageMetadata,
   }) =>
       _agentFacade.processMessageEvents(
         message: userInput,
         ledgerId: ledgerId,
         runId: runId,
         conversationId: conversationId,
-        context: {'languageCode': languageCode},
+        context: {
+          'languageCode': languageCode,
+          if (imageMetadata != null)
+            'assistantImageMetadata': imageMetadata.toJson()
+        },
         l10n: l10n,
         readOnly: readOnly,
       );

@@ -451,6 +451,15 @@ class AIProviderFactory {
     File image,
     String prompt, {
     String? logTag,
+  }) =>
+      visionMany([image], prompt, logTag: logTag);
+
+  /// Joint image understanding; assistant preprocessing uses its own Thinking setting.
+  static Future<String> visionMany(
+    List<File> images,
+    String prompt, {
+    String? logTag,
+    bool assistant = false,
   }) async {
     final tag = logTag ?? 'AIFactory';
 
@@ -469,11 +478,20 @@ class AIProviderFactory {
 
     logger.debug(tag, '发起图片理解 (${config.name}, 模型: ${config.visionModel})');
 
+    return visionManyForConfig(config, images, prompt, assistant: assistant);
+  }
+
+  @visibleForTesting
+  static Future<String> visionManyForConfig(
+      AIServiceProviderConfig config, List<File> images, String prompt,
+      {bool assistant = false, Dio? client}) {
+    if (images.isEmpty) throw AIException('No images selected');
     if (config.isZhipu) {
-      return _visionZhipu(config, image, prompt);
-    } else {
-      return _visionOpenAI(config, image, prompt);
+      if (images.length > 1) throw AIException('multi_image_unsupported');
+      return _visionZhipu(config, images.single, prompt);
     }
+    return _visionOpenAI(config, images.first, prompt,
+        images: images, assistant: assistant, client: client);
   }
 
   /// 语音转文字
@@ -1120,11 +1138,34 @@ class AIProviderFactory {
 
   static Future<String> _visionOpenAI(
       AIServiceProviderConfig config, File image, String prompt,
-      {Dio? client}) async {
+      {Dio? client, List<File>? images, bool assistant = false}) async {
     final dio = client ?? _getDio(config);
 
-    final imageBytes = await image.readAsBytes();
-    final base64Image = base64Encode(imageBytes);
+    final parts = <Map<String, dynamic>>[];
+    for (final file in images ?? [image]) {
+      final bytes = await file.readAsBytes();
+      final mime = bytes.length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50
+          ? 'image/png'
+          : bytes.length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8
+              ? 'image/jpeg'
+              : bytes.length >= 12 &&
+                      ascii.decode(bytes.sublist(0, 4), allowInvalid: true) ==
+                          'RIFF' &&
+                      ascii.decode(bytes.sublist(8, 12), allowInvalid: true) ==
+                          'WEBP'
+                  ? 'image/webp'
+                  : bytes.length >= 6 &&
+                          ascii.decode(bytes.sublist(0, 3),
+                                  allowInvalid: true) ==
+                              'GIF'
+                      ? 'image/gif'
+                      : null;
+      if (mime == null) throw AIException('Unsupported image format');
+      parts.add({
+        'type': 'image_url',
+        'image_url': {'url': 'data:$mime;base64,${base64Encode(bytes)}'}
+      });
+    }
 
     logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
 
@@ -1133,18 +1174,13 @@ class AIProviderFactory {
         '/chat/completions',
         data: {
           'model': config.visionModel,
-          ..._generationParameters(config),
+          ..._generationParameters(config, assistant: assistant),
           'messages': [
             {
               'role': 'user',
               'content': [
                 {'type': 'text', 'text': prompt},
-                {
-                  'type': 'image_url',
-                  'image_url': {
-                    'url': 'data:image/jpeg;base64,$base64Image',
-                  },
-                },
+                ...parts,
               ],
             },
           ],

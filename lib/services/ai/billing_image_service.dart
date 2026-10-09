@@ -49,6 +49,16 @@ class BillingImageService {
     return image == null ? null : File(image.path);
   }
 
+  /// Gallery selection retains picker order.
+  Future<List<File>> pickImages({required bool keepOriginal}) async {
+    final images = await _picker.pickMultiImage(
+      maxWidth: keepOriginal ? null : maxDimension.toDouble(),
+      maxHeight: keepOriginal ? null : maxDimension.toDouble(),
+      imageQuality: keepOriginal ? null : quality,
+    );
+    return images.map((image) => File(image.path)).toList();
+  }
+
   Future<BillingImageFiles> prepare(File file,
       {required bool keepOriginal}) async {
     if (!keepOriginal) return BillingImageFiles(file, file);

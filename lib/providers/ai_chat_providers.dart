@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../models/assistant_image_metadata.dart';
 
 import 'package:agentcore/agentcore.dart'
     show AgentConversationContextCompressor;
@@ -110,7 +111,8 @@ final agentAppFacadeProvider = Provider<AgentAppFacade>((ref) {
         for (final message in messages)
           {
             'role': message.role,
-            'content': message.content,
+            'content': AssistantImageMetadata.historyContent(
+                message.content, message.metadata),
             'id': message.id,
             'scopeId': _messageContextScope(message.metadata),
           },

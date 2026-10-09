@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:agentcore/agentcore.dart'
     hide
@@ -50,6 +51,7 @@ import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_zh.dart';
 import '../../l10n/app_localizations_en.dart';
 import '../system/logger_service.dart';
+import '../../models/assistant_image_metadata.dart';
 import 'ai_chat_service.dart';
 import 'ledger_follow_up_suggestions.dart';
 
@@ -289,13 +291,19 @@ final class AgentAppFacade {
     );
     final toolRegistry = localTools.buildRegistry();
     final requestContext = Map<String, Object?>.of(context);
+    final imageMetadata = requestContext.remove('assistantImageMetadata');
+    final images = imageMetadata is Map
+        ? AssistantImageMetadata.decode(jsonEncode(imageMetadata))
+        : null;
+    // Audit and explicit-memory consent use only the user's visible words.
+    final effectiveMessage = images?.effectiveRequest(message) ?? message;
     requestContext['currentTime'] = _now().toIso8601String();
     await _loadConversationHistory(
       conversationId: conversationId,
       requestContext: requestContext,
       runId: runId,
       ledgerId: ledgerId,
-      currentMessage: message,
+      currentMessage: effectiveMessage,
       cancellation: cancellationToken,
     );
     try {
@@ -325,7 +333,7 @@ final class AgentAppFacade {
     });
     var bufferQueryText = false;
     var request = AgentRequest(
-      text: message,
+      text: effectiveMessage,
       scope: scope,
       context: requestContext,
       availableToolNames: toolSelection.names,
@@ -666,13 +674,13 @@ final class AgentAppFacade {
               'runId': runId,
               'callId': call.id,
               'tool': call.name,
-              'arguments': call.arguments,
+              'arguments': _visibleToolArguments(call.arguments),
             });
             emit?.call(
               AgentToolStartedEvent(
                 call.name,
                 callId: call.id,
-                arguments: call.arguments,
+                arguments: _visibleToolArguments(call.arguments),
               ),
             );
           },
@@ -689,7 +697,7 @@ final class AgentAppFacade {
               'runId': runId,
               'callId': call.id,
               'tool': call.name,
-              'arguments': call.arguments,
+              'arguments': _visibleToolArguments(call.arguments),
               if (result != null) 'result': result,
               if (error != null) 'error': error.toString(),
             };
@@ -702,7 +710,7 @@ final class AgentAppFacade {
               AgentToolCompletedEvent(
                 call.name,
                 callId: call.id,
-                arguments: call.arguments,
+                arguments: _visibleToolArguments(call.arguments),
                 result: result,
                 error: error?.toString(),
                 succeeded: error == null,
@@ -734,7 +742,7 @@ final class AgentAppFacade {
         'runId': runId,
         'callId': denied.call.id,
         'tool': denied.call.name,
-        'arguments': denied.call.arguments,
+        'arguments': _visibleToolArguments(denied.call.arguments),
         'reason': denied.reason,
       });
       await _memoryRepository.recordToolCall(
@@ -799,6 +807,28 @@ final class AgentAppFacade {
           : result.text,
     );
   }
+}
+
+/// Tool source text may include hidden image context; UI timelines and logs
+/// retain the visible request without duplicating that context.
+Map<String, Object?> _visibleToolArguments(Map<String, Object?> arguments) {
+  Object? visible(Object? value) {
+    if (value is String) {
+      return value
+          .replaceAll(
+              RegExp(
+                  r'<model_derived_image_context>[\s\S]*?</model_derived_image_context>'),
+              '')
+          .trim();
+    }
+    if (value is Map<String, Object?>) {
+      return value.map((key, item) => MapEntry(key, visible(item)));
+    }
+    if (value is List) return value.map(visible).toList();
+    return value;
+  }
+
+  return arguments.map((key, value) => MapEntry(key, visible(value)));
 }
 
 final class _DefaultAgentExecutionSettingsStore
@@ -932,7 +962,9 @@ final class _RunAuthorization
         'runId': _currentRequest?.runId,
         'authorizationId': _currentRequest?.authorizationId,
         'tool': _currentRequest?.toolName,
-        'arguments': _currentRequest?.arguments,
+        'arguments': _currentRequest == null
+            ? null
+            : _visibleToolArguments(_currentRequest!.arguments),
         'ledgerId': _currentRequest?.ledgerId,
       };
 

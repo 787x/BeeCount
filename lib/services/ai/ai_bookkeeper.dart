@@ -3,6 +3,8 @@ import 'dart:io';
 import '../../ai/core/ai_extraction_context.dart';
 import '../../ai/core/ai_extraction_engine.dart';
 import '../../ai/core/bill_info.dart';
+import '../../ai/core/billing_draft.dart';
+import '../../ai/core/billing_draft_analyzer.dart';
 import '../../ai/core/prompt_builder.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -51,8 +53,9 @@ class AiBookkeeper {
       repository: _repo,
       ledgerId: ledgerId,
     );
-    final bills = await _engine.extractFromText(text, context, billGuard: billGuard);
-    return _persistAll(
+    final bills =
+        await _engine.extractFromText(text, context, billGuard: billGuard);
+    return persistBills(
       bills: bills,
       ledgerId: ledgerId,
       billingTypes: billingTypes,
@@ -79,8 +82,9 @@ class AiBookkeeper {
       repository: _repo,
       ledgerId: ledgerId,
     );
-    final bills = await _engine.extractFromImage(image, context, billGuard: billGuard);
-    return _persistAll(
+    final bills =
+        await _engine.extractFromImage(image, context, billGuard: billGuard);
+    return persistBills(
       bills: bills,
       ledgerId: ledgerId,
       billingTypes: billingTypes,
@@ -102,7 +106,7 @@ class AiBookkeeper {
       ledgerId: ledgerId,
     );
     final audioResult = await _engine.extractFromAudio(audio, context);
-    final result = await _persistAll(
+    final result = await persistBills(
       bills: audioResult.bills,
       ledgerId: ledgerId,
       billingTypes: billingTypes,
@@ -114,11 +118,52 @@ class AiBookkeeper {
   /// 仅语音转文字(快捷指令首步,不走提取)
   Future<String?> speechToText(File audio) => _engine.speechToText(audio);
 
+  /// Confirmed drafts reuse the normal persistence path and original source indexes.
+  Future<BookkeepingResult> persistDrafts({
+    required List<BillingDraft> drafts,
+    required List<File> sourceImages,
+    required int ledgerId,
+    required List<String> billingTypes,
+    required DateTime fallbackTime,
+    AppLocalizations? l10n,
+    Future<void> Function(int txId, File source, int attachmentIndex)?
+        saveAttachment,
+  }) =>
+      persistBills(
+          bills: drafts.map((draft) => draft.toBill(fallbackTime)).toList(),
+          ledgerId: ledgerId,
+          billingTypes: billingTypes,
+          l10n: l10n,
+          onSaved: saveAttachment == null
+              ? null
+              : (txId, billIndex) async {
+                  final sources =
+                      drafts[billIndex].attachmentIndexes(sourceImages.length);
+                  for (var index = 0; index < sources.length; index++) {
+                    await saveAttachment(
+                        txId, sourceImages[sources[index]], index);
+                  }
+                });
+
+  /// Analyze manual images without transaction, attachment or sync writes.
+  Future<BillingDraftAnalysis> analyzeImages(
+      {required List<File> images,
+      required int ledgerId,
+      required List<String> replies,
+      BillingDraftAnalysis? previous}) async {
+    final context = await AiExtractionContext.forLedger(
+        repository: _repo, ledgerId: ledgerId);
+    return const BillingDraftAnalyzer()
+        .analyze(images, context, replies, previous);
+  }
+
   // ============================================================
   // 内部:落库 + 聚合结果
   // ============================================================
 
-  Future<BookkeepingResult> _persistAll({
+  /// Persists already analyzed bills through the same creation service as legacy inputs.
+  /// [onSaved] receives the original bill index, including preceding failures.
+  Future<BookkeepingResult> persistBills({
     required List<BillInfo> bills,
     required int ledgerId,
     required List<String> billingTypes,
@@ -144,7 +189,7 @@ class AiBookkeeper {
         );
         if (txId == null) {
           failed++;
-          logger.warning(_tag, '第 ${i + 1} 笔创建失败: ${bill.toJson()}');
+          logger.warning(_tag, '第 ${i + 1} 笔创建失败');
           continue;
         }
 
@@ -155,7 +200,7 @@ class AiBookkeeper {
         //    完整性;附件被 kill 才是数据丢失。
         if (onSaved != null) {
           try {
-            await onSaved(txId, txIds.length);
+            await onSaved(txId, i);
           } catch (e, st) {
             logger.error(_tag, 'onSaved 回调异常,不影响主流程', e, st);
           }
@@ -168,8 +213,8 @@ class AiBookkeeper {
         try {
           enriched = await _enrichWithActualNames(bill, txId);
         } catch (e, st) {
-          logger.error(_tag, 'enrichWithActualNames 异常,用 AI 原始 BillInfo',
-              e, st);
+          logger.error(
+              _tag, 'enrichWithActualNames 异常,用 AI 原始 BillInfo', e, st);
           enriched = bill;
         }
         saved.add(enriched);
@@ -195,14 +240,14 @@ class AiBookkeeper {
 
   /// 找出本批里「外币且未折算」的币种(A5)。判定条件与 L11 补折算横幅一致:
   /// `currencyCode != 账本本位币 && nativeAmount == amount`。
-  Future<List<String>> _collectUnconverted(List<int> txIds, int ledgerId) async {
+  Future<List<String>> _collectUnconverted(
+      List<int> txIds, int ledgerId) async {
     if (txIds.isEmpty) return const [];
     try {
       final ledger = await _repo.getLedgerById(ledgerId);
-      final base = ((ledger?.currency.isNotEmpty ?? false)
-              ? ledger!.currency
-              : 'CNY')
-          .toUpperCase();
+      final base =
+          ((ledger?.currency.isNotEmpty ?? false) ? ledger!.currency : 'CNY')
+              .toUpperCase();
       final codes = <String>{};
       for (final id in txIds) {
         final tx = await _repo.getTransactionById(id);

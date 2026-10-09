@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import '../../models/assistant_image_metadata.dart';
+import '../../services/ai/assistant_image_service.dart';
+import '../../widgets/ai/ai_privacy_consent_dialog.dart';
 
 import 'package:agentcore/agentcore.dart'
     show AgentNativeModelPhase, AgentPromptSuggestion;
@@ -64,6 +67,8 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
       AgentConversationScrollCoordinator(_scrollController);
   int? _conversationId;
   bool _isLoading = false;
+  bool _processingImages = false;
+  final List<File> _selectedImages = [];
   int? _animatingMessageId; // 正在播放动画的消息ID
   String? _userAvatarPath; // 用户头像路径
   AIConfigValidationResult? _apiValidation; // API配置验证结果
@@ -500,7 +505,13 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
                           .withValues(alpha: 0.3)),
                 ),
                 child: TypewriterText(
-                    text: message.content,
+                    text: [
+                      message.content,
+                      if (AssistantImageMetadata.decode(message.metadata)
+                          case final images?)
+                        AppLocalizations.of(context)
+                            .aiImageCount(images.imageCount),
+                    ].join('\n'),
                     animate: message.id == _animatingMessageId,
                     style: TextStyle(
                         color: BeeTokens.textPrimary(context),
@@ -706,10 +717,47 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
       ),
       child: SafeArea(
         top: false, // 不保护顶部，避免额外空白
-        child: Row(
-          children: [
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (_selectedImages.isNotEmpty)
+            SizedBox(
+                height: 72,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final image in _selectedImages)
+                      Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Stack(children: [
+                            Image.file(image,
+                                width: 64,
+                                height: 64,
+                                fit: BoxFit.cover,
+                                cacheWidth: 128,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image)),
+                            Positioned(
+                                right: 0,
+                                top: 0,
+                                child: IconButton(
+                                    tooltip: AppLocalizations.of(context)
+                                        .aiImagesRemove,
+                                    icon: const Icon(Icons.cancel),
+                                    onPressed: _isLoading || _processingImages
+                                        ? null
+                                        : () => setState(() =>
+                                            _selectedImages.remove(image)))),
+                          ]))
+                  ],
+                )),
+          Row(children: [
+            IconButton(
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                tooltip: AppLocalizations.of(context).aiImagesAdd,
+                onPressed:
+                    _isLoading || _processingImages ? null : _pickChatImages),
             SpeechInputButton(
-                controller: _inputController, enabled: !_isLoading),
+                controller: _inputController,
+                enabled: !_isLoading && !_processingImages),
             Expanded(
               child: TextField(
                 controller: _inputController,
@@ -733,7 +781,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
                 maxLines: null,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
-                enabled: !_isLoading,
+                enabled: !_isLoading && !_processingImages,
               ),
             ),
             SizedBox(width: 8.0.scaled(context, ref)),
@@ -746,10 +794,15 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
               ),
               tooltip:
                   _isLoading ? AppLocalizations.of(context).agentRunStop : null,
-              onPressed: _isLoading ? _stopCurrentAgentRun : _sendMessage,
+              onPressed: _processingImages
+                  ? null
+                  : _isLoading
+                      ? _stopCurrentAgentRun
+                      : _sendMessage,
             ),
-          ],
-        ),
+          ]),
+          if (_processingImages) const LinearProgressIndicator(),
+        ]),
       ),
     );
   }
@@ -770,17 +823,68 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
 
   Future<void> _sendMessage() async {
     final text = _inputController.text.trim();
-    if (!mounted || text.isEmpty || _isLoading) return;
-
+    if (!mounted ||
+        (text.isEmpty && _selectedImages.isEmpty) ||
+        _isLoading ||
+        _processingImages ||
+        _conversationId == null) {
+      return;
+    }
+    AssistantImageMetadata? imageMetadata;
+    if (_selectedImages.isNotEmpty) {
+      setState(() => _processingImages = true);
+      try {
+        if (!await ensureAiPrivacyConsent(context, ref) || !mounted) return;
+        imageMetadata = await ref
+            .read(assistantImageServiceProvider)
+            .describe(List.of(_selectedImages), text);
+        if (!mounted) return;
+      } catch (error) {
+        if (mounted) {
+          showToast(
+              context,
+              error.toString().contains('multi_image_unsupported')
+                  ? AppLocalizations.of(context).aiImagesUnsupported
+                  : AppLocalizations.of(context).aiImageProcessingFailed);
+        }
+        return;
+      } finally {
+        if (mounted) setState(() => _processingImages = false);
+      }
+    }
+    if (!mounted) return;
+    final visible = text.isEmpty
+        ? AppLocalizations.of(context).aiImagesSent(_selectedImages.length)
+        : text;
     _inputController.clear();
-    await _sendMessageText(text);
+    setState(() => _selectedImages.clear());
+    await _sendMessageText(visible, imageMetadata: imageMetadata);
+  }
+
+  Future<void> _pickChatImages() async {
+    try {
+      final files = await ref.read(chatImagePickerProvider)();
+      if (mounted) setState(() => _selectedImages.addAll(files));
+    } catch (_) {
+      if (mounted) {
+        showToast(
+            context, AppLocalizations.of(context).aiImageProcessingFailed);
+      }
+    }
   }
 
   /// 发送消息文本
   ///
   /// [text] is both the visible user message and the Agent's current request.
-  Future<void> _sendMessageText(String text, {bool readOnly = false}) async {
-    if (!mounted || text.isEmpty || _isLoading) return;
+  Future<void> _sendMessageText(String text,
+      {bool readOnly = false, AssistantImageMetadata? imageMetadata}) async {
+    if (!mounted ||
+        text.isEmpty ||
+        _isLoading ||
+        _processingImages ||
+        _conversationId == null) {
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -799,7 +903,10 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
           role: 'user',
           content: text,
           messageType: 'text',
-          metadata: Value(jsonEncode({'contextLedgerId': ledgerId})),
+          metadata: Value(jsonEncode({
+            'contextLedgerId': ledgerId,
+            if (imageMetadata != null) ...imageMetadata.toJson()
+          })),
           createdAt: Value(DateTime.now()),
         ),
       );
@@ -838,6 +945,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage>
         languageCode: currentLocale.languageCode,
         l10n: l10n,
         readOnly: readOnly,
+        imageMetadata: imageMetadata,
       )) {
         if (!mounted) break;
         switch (event) {
