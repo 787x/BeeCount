@@ -13,6 +13,8 @@ import '../system/logger_service.dart';
 
 /// AppLink 动作类型
 enum AppLinkAction {
+  /// 前台自然语言快捷记账
+  text,
   /// 语音记账
   voice,
 
@@ -269,6 +271,8 @@ class AppLinkService {
   static AppLinkAction parseAction(Uri uri) {
     final host = uri.host.toLowerCase();
     switch (host) {
+      case 'text':
+        return AppLinkAction.text;
       case 'voice':
         return AppLinkAction.voice;
       case 'image':
@@ -302,6 +306,10 @@ class AppLinkService {
     final queryParams = uri.queryParameters;
 
     switch (action) {
+      case AppLinkAction.text:
+        onNavigate?.call(AppLinkAction.text);
+        return AppLinkResult.success(message: '打开文字记账');
+
       case AppLinkAction.voice:
         logger.info('AppLink', '打开语音记账');
         onNavigate?.call(AppLinkAction.voice);

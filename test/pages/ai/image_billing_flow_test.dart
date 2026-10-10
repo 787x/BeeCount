@@ -1,3 +1,10 @@
+import 'package:beecount/utils/voice_billing_helper.dart';
+import 'package:beecount/ai/providers/ai_provider_config.dart';
+import 'package:beecount/ai/providers/ai_constants.dart';
+import 'package:beecount/services/attachment_service.dart';
+import 'dart:convert';
+import 'package:beecount/utils/text_billing_helper.dart';
+import 'package:beecount/services/ai/quick_billing_policy.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,6 +87,18 @@ class _Bookkeeper extends AiBookkeeper {
   }
 
   @override
+  Future<BillingDraftAnalysis> analyzeText(
+      {required String text,
+      required int ledgerId,
+      required List<String> replies,
+      BillingDraftAnalysis? previous}) async {
+    requests.add((images: 0, replies: List.of(replies)));
+    final response = responses.removeAt(0);
+    if (response is BillingDraftAnalysis) return response;
+    throw response;
+  }
+
+  @override
   Future<BookkeepingResult> persistDrafts(
       {required List<BillingDraft> drafts,
       required List<File> sourceImages,
@@ -97,6 +116,22 @@ class _Bookkeeper extends AiBookkeeper {
         fallbackTime: fallbackTime,
         l10n: l10n,
         saveAttachment: saveAttachment);
+  }
+}
+
+class _Attachments extends AttachmentService {
+  _Attachments(super.ref);
+  @override
+  Future<TransactionAttachment?> saveAttachment(
+      {required int transactionId,
+      required File sourceFile,
+      required int index,
+      bool urgent = false}) async {
+    await ref.read(repositoryProvider).createAttachment(
+        transactionId: transactionId,
+        fileName: sourceFile.path,
+        sortOrder: index);
+    return null;
   }
 }
 
@@ -127,8 +162,14 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({
       'ai_privacy_consent_version': 3,
-      'ai_providers_v2': '[]',
-      'ai_capability_binding_v2': '{}'
+      AIConstants.keyAiBillExtractionEnabled: true,
+      'ai_providers_v2': jsonEncode([
+        AIServiceProviderConfig.deepSeekDefault
+            .copyWith(apiKey: 'fake')
+            .toJson()
+      ]),
+      'ai_capability_binding_v2': jsonEncode(
+          const AICapabilityBinding(textProviderId: 'deepseek').toJson())
     });
     database = BeeDatabase.forTesting(NativeDatabase.memory());
     repository = LocalRepository(database);
@@ -140,13 +181,16 @@ void main() {
     await database.close();
   });
 
-  Widget host(_Bookkeeper bookkeeper) => ProviderScope(
+  Widget host(_Bookkeeper bookkeeper, {bool autoAttachment = false}) =>
+      ProviderScope(
           overrides: [
             databaseProvider.overrideWithValue(database),
             repositoryProvider.overrideWithValue(repository),
             aiBookkeeperProvider.overrideWithValue(bookkeeper),
             billingImageServiceProvider.overrideWithValue(images),
-            smartBillingAutoAttachmentProvider.overrideWith((ref) => false),
+            smartBillingAutoAttachmentProvider
+                .overrideWith((ref) => autoAttachment),
+            attachmentServiceProvider.overrideWith((ref) => _Attachments(ref)),
             speechInputRequestProvider.overrideWithValue((_, __) async => '20'),
           ],
           child: MaterialApp(
@@ -157,6 +201,15 @@ void main() {
               home: Consumer(
                   builder: (context, ref, _) => Scaffold(
                           body: Column(children: [
+                        TextButton(
+                            onPressed: () =>
+                                VoiceBillingHelper.startVoiceBilling(
+                                    context, ref),
+                            child: const Text('voice')),
+                        TextButton(
+                            onPressed: () => TextBillingHelper.startTextBilling(
+                                context, ref),
+                            child: const Text('text')),
                         TextButton(
                             onPressed: () =>
                                 ImageBillingHelper.pickImageForBilling(
@@ -174,6 +227,193 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
     expect(tester.takeException(), isNull);
+  }
+
+  Future<void> setPolicy(QuickBillingResultPolicy policy) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        QuickBillingPolicyNotifier.preferenceKey, jsonEncode(policy.toJson()));
+  }
+
+  Future<void> start(WidgetTester tester, String entry) async {
+    await tester.tap(find.text(entry));
+    if (entry == 'text') {
+      await _until(
+          tester,
+          () => find
+              .byKey(const ValueKey('quick-billing-text'))
+              .evaluate()
+              .isNotEmpty);
+      await tester.enterText(
+          find.byKey(const ValueKey('quick-billing-text')), '午饭35元');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('quick-billing-text-submit')));
+    }
+  }
+
+  Future<void> zeroWrites() async {
+    expect(await database.select(database.transactions).get(), isEmpty);
+    expect(
+        await database.select(database.transactionAttachments).get(), isEmpty);
+  }
+
+  for (final entry in ['text', 'voice', 'gallery']) {
+    for (final cancel in [false, true]) {
+      testWidgets('$entry ready confirm zero writes, cancel=$cancel',
+          (tester) async {
+        await setPolicy(
+            const QuickBillingResultPolicy(readyAction: ReadyAction.confirm));
+        final bookkeeper = _Bookkeeper(repository, [
+          const BillingDraftAnalysis(drafts: [
+            BillingDraft(BillInfo(amount: 20, type: BillType.expense)),
+            BillingDraft(BillInfo(amount: 40, type: BillType.income))
+          ])
+        ]);
+        await tester.pumpWidget(host(bookkeeper, autoAttachment: true));
+        await tester.pumpAndSettle();
+        await start(tester, entry);
+        await _until(
+            tester, () => find.byType(BillingDraftPage).evaluate().isNotEmpty);
+        await zeroWrites();
+        expect(find.textContaining('20.00'), findsOneWidget);
+        expect(find.textContaining('40.00'), findsOneWidget);
+        expect(find.byType(TextField), findsNothing);
+        if (cancel) {
+          await tester.tap(find.text('取消'));
+          await _until(
+              tester, () => find.byType(BillingDraftPage).evaluate().isEmpty);
+          await zeroWrites();
+          expect(bookkeeper.saves, 0);
+        } else {
+          await tester.tap(find.byKey(const ValueKey('billing-draft-confirm')));
+          await tester.tap(find.byKey(const ValueKey('billing-draft-confirm')));
+          await tester.pump();
+          await _until(
+              tester,
+              () =>
+                  bookkeeper.saves == 1 &&
+                  find.byType(BillingDraftPage).evaluate().isEmpty);
+          expect(
+              await database.select(database.transactions).get(), hasLength(2));
+          expect(await database.select(database.transactionAttachments).get(),
+              hasLength(entry == 'gallery' ? 2 : 0));
+        }
+        expect(images.prepared.every((i) => i.disposals == 1), true);
+        await finish(tester);
+      });
+    }
+    for (final first in [const BillingDraftAnalysis(), _needsInput]) {
+      testWidgets(
+          '$entry clarify then confirm uses snapshot (${first.needsInput})',
+          (tester) async {
+        await setPolicy(const QuickBillingResultPolicy(
+            noBillAction: NoBillAction.clarify,
+            readyAction: ReadyAction.confirm));
+        final bookkeeper = _Bookkeeper(repository, [first, _ready]);
+        await tester.pumpWidget(host(bookkeeper));
+        await tester.pumpAndSettle();
+        await start(tester, entry);
+        await _until(
+            tester, () => find.byType(BillingDraftPage).evaluate().isNotEmpty);
+        await zeroWrites();
+        await setPolicy(const QuickBillingResultPolicy());
+        await tester.enterText(find.byType(TextField), '其实午饭20元');
+        await tester.tap(find.byKey(const ValueKey('billing-draft-send')));
+        await _until(
+            tester,
+            () => find
+                .byKey(const ValueKey('billing-draft-confirm'))
+                .evaluate()
+                .isNotEmpty);
+        await zeroWrites();
+        expect(bookkeeper.saves, 0);
+        await tester.tap(find.byKey(const ValueKey('billing-draft-confirm')));
+        await _until(
+            tester,
+            () =>
+                bookkeeper.saves == 1 &&
+                find.byType(BillingDraftPage).evaluate().isEmpty);
+        expect(
+            await database.select(database.transactions).get(), hasLength(1));
+        await finish(tester);
+      });
+    }
+    for (final safe in [true, false]) {
+      testWidgets('$entry best effort safe=$safe uses whole batch',
+          (tester) async {
+        await setPolicy(const QuickBillingResultPolicy(
+            needsInputAction: NeedsInputAction.saveBestEffort));
+        final bookkeeper = _Bookkeeper(repository, [
+          BillingDraftAnalysis(drafts: [
+            const BillingDraft(BillInfo(amount: 35, type: BillType.expense),
+                uncertainFields: ['currency']),
+            if (!safe) const BillingDraft(BillInfo(type: BillType.expense)),
+          ], needsInput: true)
+        ]);
+        await tester.pumpWidget(host(bookkeeper));
+        await tester.pumpAndSettle();
+        await start(tester, entry);
+        if (safe) {
+          await _until(tester, () => bookkeeper.saves == 1);
+          await _until(
+              tester,
+              () =>
+                  images.prepared.every((i) => i.disposals == 1) &&
+                  find.byType(AlertDialog).evaluate().isEmpty);
+          expect(
+              await database.select(database.transactions).get(), hasLength(1));
+        } else {
+          await _until(tester,
+              () => find.byType(BillingDraftPage).evaluate().isNotEmpty);
+          await zeroWrites();
+          expect(bookkeeper.saves, 0);
+          await tester.tap(find.text('取消'));
+          await _until(
+              tester, () => find.byType(BillingDraftPage).evaluate().isEmpty);
+        }
+        await finish(tester);
+      });
+    }
+  }
+  testWidgets('text input whitespace and cancel never analyze or write',
+      (tester) async {
+    final bookkeeper = _Bookkeeper(repository, []);
+    await tester.pumpWidget(host(bookkeeper));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('text'));
+    await _until(tester, () => find.byType(TextField).evaluate().isNotEmpty);
+    await tester.enterText(find.byType(TextField), '   ');
+    await tester.pump();
+    expect(
+        tester
+            .widget<FilledButton>(
+                find.byKey(const ValueKey('quick-billing-text-submit')))
+            .onPressed,
+        isNull);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(bookkeeper.requests, isEmpty);
+    await zeroWrites();
+    await finish(tester);
+  });
+  for (final analysis in [_ready, const BillingDraftAnalysis()]) {
+    testWidgets('text defaults ready=${analysis.ready}', (tester) async {
+      final bookkeeper = _Bookkeeper(repository, [analysis]);
+      await tester.pumpWidget(host(bookkeeper));
+      await tester.pumpAndSettle();
+      await start(tester, 'text');
+      await _until(
+          tester,
+          () =>
+              bookkeeper.requests.isNotEmpty &&
+              find.byType(AlertDialog).evaluate().isEmpty);
+      expect(bookkeeper.saves, analysis.ready ? 1 : 0);
+      expect(await database.select(database.conversations).get(), isEmpty);
+      expect(await database.select(database.messages).get(), isEmpty);
+      expect(find.byType(BillingDraftPage), findsNothing);
+      if (!analysis.ready) await zeroWrites();
+      await finish(tester);
+    });
   }
 
   for (final entry in ['gallery', 'camera']) {

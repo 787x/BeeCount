@@ -25,6 +25,7 @@ import 'cloud/transactions_sync_manager.dart';
 import 'cloud/sync/sync_engine.dart';
 import 'providers/sync_providers.dart' as sp;
 import 'utils/voice_billing_helper.dart';
+import 'utils/text_billing_helper.dart';
 import 'utils/image_billing_helper.dart';
 import 'pages/ai/ai_chat_page.dart';
 import 'services/platform/app_link_service.dart';
@@ -524,6 +525,9 @@ class _BeeAppState extends ConsumerState<BeeApp>
   }) {
     final nav = Navigator.of(context, rootNavigator: true);
     switch (action) {
+      case AppLinkAction.text:
+        TextBillingHelper.startTextBilling(context, ref);
+        break;
       case AppLinkAction.voice:
         VoiceBillingHelper.startVoiceBilling(context, ref);
         break;

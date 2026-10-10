@@ -8398,6 +8398,78 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiDraftRetry => '重试分析';
+
+  @override
+  String get billingTextAction => '文字记账';
+
+  @override
+  String get billingTextHint => '例如：午饭 35 元，支付宝';
+
+  @override
+  String get quickBillingAnalyze => '开始识别';
+
+  @override
+  String get quickBillingPolicyTitle => '快捷记账结果处理';
+
+  @override
+  String get quickBillingNoBill => '未识别到账单';
+
+  @override
+  String get quickBillingNeedsInput => '信息不足';
+
+  @override
+  String get quickBillingReady => '信息完整';
+
+  @override
+  String get quickBillingNotify => '直接提示';
+
+  @override
+  String get quickBillingNotifyDesc => '没有识别到账单时结束本次记账并提示';
+
+  @override
+  String get quickBillingContinue => '继续补充信息';
+
+  @override
+  String get quickBillingContinueDesc => '进入补充页面，可继续输入信息后重新识别';
+
+  @override
+  String get quickBillingClarify => '补充信息';
+
+  @override
+  String get quickBillingClarifyDesc => '存在金额、类型、币种等重要歧义时先询问';
+
+  @override
+  String get quickBillingBestEffort => '尽量直接记账';
+
+  @override
+  String get quickBillingBestEffortDesc => '已有结果能够安全保存时使用 AI 当前判断；缺少必要信息时仍会要求补充';
+
+  @override
+  String get quickBillingSave => '直接记账';
+
+  @override
+  String get quickBillingSaveDesc => '识别完整后立即保存';
+
+  @override
+  String get quickBillingReview => '记账前确认';
+
+  @override
+  String get quickBillingReviewDesc => '先展示识别结果，确认后再保存';
+
+  @override
+  String get quickBillingConfirm => '确认记账';
+
+  @override
+  String get quickBillingNoBillPrompt => '暂未识别到账单，可补充金额、收支类型或其它交易信息。';
+
+  @override
+  String get quickBillingBestEffortFallback => '仍缺少安全记账所需的信息，请补充后继续。';
+
+  @override
+  String get quickBillingNoBillNotice => '未识别到账单信息';
+
+  @override
+  String get quickBillingAnalyzing => '正在识别账单...';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -16151,4 +16223,76 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiDraftRetry => '重試分析';
+
+  @override
+  String get billingTextAction => '文字記帳';
+
+  @override
+  String get billingTextHint => '例如：午餐 35 元，支付寶';
+
+  @override
+  String get quickBillingAnalyze => '開始辨識';
+
+  @override
+  String get quickBillingPolicyTitle => '快捷記帳結果處理';
+
+  @override
+  String get quickBillingNoBill => '未辨識到帳單';
+
+  @override
+  String get quickBillingNeedsInput => '資訊不足';
+
+  @override
+  String get quickBillingReady => '資訊完整';
+
+  @override
+  String get quickBillingNotify => '直接提示';
+
+  @override
+  String get quickBillingNotifyDesc => '沒有辨識到帳單時結束本次記帳並提示';
+
+  @override
+  String get quickBillingContinue => '繼續補充資訊';
+
+  @override
+  String get quickBillingContinueDesc => '進入補充頁面，可繼續輸入資訊後重新辨識';
+
+  @override
+  String get quickBillingClarify => '補充資訊';
+
+  @override
+  String get quickBillingClarifyDesc => '存在金額、類型、幣別等重要歧義時先詢問';
+
+  @override
+  String get quickBillingBestEffort => '盡量直接記帳';
+
+  @override
+  String get quickBillingBestEffortDesc => '已有結果能夠安全儲存時使用 AI 目前判斷；缺少必要資訊時仍會要求補充';
+
+  @override
+  String get quickBillingSave => '直接記帳';
+
+  @override
+  String get quickBillingSaveDesc => '辨識完整後立即儲存';
+
+  @override
+  String get quickBillingReview => '記帳前確認';
+
+  @override
+  String get quickBillingReviewDesc => '先顯示辨識結果，確認後再儲存';
+
+  @override
+  String get quickBillingConfirm => '確認記帳';
+
+  @override
+  String get quickBillingNoBillPrompt => '暫未辨識到帳單，可補充金額、收支類型或其他交易資訊。';
+
+  @override
+  String get quickBillingBestEffortFallback => '仍缺少安全記帳所需的資訊，請補充後繼續。';
+
+  @override
+  String get quickBillingNoBillNotice => '未辨識到帳單資訊';
+
+  @override
+  String get quickBillingAnalyzing => '正在辨識帳單...';
 }

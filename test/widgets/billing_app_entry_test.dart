@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets(
-      'real center tap opens four entries; manual keeps quick-add editor; long press keeps radial actions',
+      'real center tap opens five entries; manual keeps quick-add editor; long press keeps radial actions',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     final database = BeeDatabase.forTesting(NativeDatabase.memory());
@@ -34,6 +34,14 @@ void main() {
     await tester.tap(center);
     await tester.pumpAndSettle();
     expect(find.text('手动记账'), findsOneWidget);
+    expect(find.text('文字记账'), findsOneWidget);
+    await tester.tap(find.text('文字记账'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('quick-billing-text')), findsOneWidget);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    await tester.tap(center);
+    await tester.pumpAndSettle();
     expect(find.byIcon(Icons.camera_alt_rounded), findsOneWidget);
     expect(find.byIcon(Icons.photo_library_rounded), findsOneWidget);
     expect(find.byIcon(Icons.mic_rounded), findsOneWidget);

@@ -2251,5 +2251,29 @@
       }
     }
   },
-  "aiDraftRetry": "분석 재시도"
+  "aiDraftRetry": "분석 재시도",
+  "billingTextAction": "텍스트 기록",
+  "billingTextHint": "예: 점심 35, Alipay 결제",
+  "quickBillingAnalyze": "분석 시작",
+  "quickBillingPolicyTitle": "빠른 기록 결과 처리",
+  "quickBillingNoBill": "거래 없음",
+  "quickBillingNeedsInput": "정보 부족",
+  "quickBillingReady": "정보 완성",
+  "quickBillingNotify": "알림",
+  "quickBillingNotifyDesc": "거래가 없으면 종료하고 알림 표시",
+  "quickBillingContinue": "정보 추가",
+  "quickBillingContinueDesc": "정보를 추가하고 다시 분석",
+  "quickBillingClarify": "추가 정보 요청",
+  "quickBillingClarifyDesc": "금액, 유형, 통화 등 필수 정보가 모호하면 먼저 질문",
+  "quickBillingBestEffort": "가능하면 바로 저장",
+  "quickBillingBestEffortDesc": "안전하게 저장할 수 있으면 AI의 판단을 사용하고 필수 정보가 없으면 추가 요청",
+  "quickBillingSave": "바로 저장",
+  "quickBillingSaveDesc": "분석이 완료되면 바로 저장",
+  "quickBillingReview": "저장 전 확인",
+  "quickBillingReviewDesc": "모든 결과를 표시하고 확인 후 저장",
+  "quickBillingConfirm": "기록 확인",
+  "quickBillingNoBillPrompt": "거래를 찾지 못했습니다. 금액, 수입 또는 지출 유형 등 거래 정보를 추가하세요.",
+  "quickBillingBestEffortFallback": "안전한 기록에 필요한 정보가 부족합니다. 추가 정보를 입력하세요.",
+  "quickBillingNoBillNotice": "거래 정보를 찾지 못했습니다",
+  "quickBillingAnalyzing": "거래 정보를 분석하는 중..."
 }

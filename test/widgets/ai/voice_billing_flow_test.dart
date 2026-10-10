@@ -1,3 +1,5 @@
+import 'package:beecount/ai/core/billing_draft.dart';
+import 'package:beecount/ai/core/bill_info.dart';
 // Platform interfaces are supplied by the existing record/path_provider plugins.
 // ignore_for_file: depend_on_referenced_packages
 
@@ -34,13 +36,27 @@ class _Bookkeeper implements AiBookkeeper {
 
   final calls = <({String text, int ledgerId, List<String> tags})>[];
   @override
-  Future<BookkeepingResult> fromText(
+  Future<BillingDraftAnalysis> analyzeText(
       {required String text,
       required int ledgerId,
+      required List<String> replies,
+      BillingDraftAnalysis? previous}) async {
+    calls.add((text: text, ledgerId: ledgerId, tags: []));
+    return const BillingDraftAnalysis(
+        drafts: [BillingDraft(BillInfo(amount: 35, type: BillType.expense))]);
+  }
+
+  @override
+  Future<BookkeepingResult> persistDrafts(
+      {required List<BillingDraft> drafts,
+      required List<File> sourceImages,
+      required int ledgerId,
       required List<String> billingTypes,
-      String billGuard = '',
-      AppLocalizations? l10n}) async {
-    calls.add((text: text, ledgerId: ledgerId, tags: billingTypes));
+      required DateTime fallbackTime,
+      AppLocalizations? l10n,
+      Future<void> Function(int, File, int)? saveAttachment}) async {
+    final call = calls.removeLast();
+    calls.add((text: call.text, ledgerId: ledgerId, tags: billingTypes));
     return BookkeepingResult.empty;
   }
 
@@ -123,7 +139,7 @@ void main() {
                         child: const Text('record'))))),
       );
   testWidgets(
-      'local speech with DeepSeek and no speech binding reaches fromText with voice + AI tags',
+      'local speech with DeepSeek and no speech binding reaches text draft with voice + AI tags',
       (tester) async {
     final bookkeeper = _Bookkeeper();
     var inputCalls = 0;
@@ -138,7 +154,7 @@ void main() {
     expect(bookkeeper.calls.single.ledgerId, 7);
     expect(bookkeeper.calls.single.tags,
         [TagSeedService.billingTypeVoice, TagSeedService.billingTypeAi]);
-    expect(find.textContaining('午饭35'), findsOneWidget);
+    expect(find.text('未识别到账单信息'), findsOneWidget);
     await tester.pump(const Duration(seconds: 3));
   });
   testWidgets('cancel, empty and STT failure never enter accounting service',

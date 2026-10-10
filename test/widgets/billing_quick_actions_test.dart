@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-      'tap sheet exposes all four actions and returns their existing routes',
+      'tap sheet exposes all five actions and returns their existing routes',
       (tester) async {
     AppLinkAction? selected;
     await tester.pumpWidget(MaterialApp(
@@ -25,6 +25,7 @@ void main() {
     ));
     for (final action in [
       AppLinkAction.newTransaction,
+      AppLinkAction.text,
       AppLinkAction.camera,
       AppLinkAction.image,
       AppLinkAction.voice
@@ -32,13 +33,14 @@ void main() {
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
       final tiles = find.byType(ListTile);
-      expect(tiles, findsNWidgets(5));
+      expect(tiles, findsNWidgets(6));
       expect(find.text('手动记账'), findsOneWidget);
       expect(find.byIcon(Icons.camera_alt_rounded), findsOneWidget);
       expect(find.byIcon(Icons.photo_library_rounded), findsOneWidget);
       expect(find.byIcon(Icons.mic_rounded), findsOneWidget);
       await tester.tap(tiles.at([
             AppLinkAction.newTransaction,
+            AppLinkAction.text,
             AppLinkAction.camera,
             AppLinkAction.image,
             AppLinkAction.voice

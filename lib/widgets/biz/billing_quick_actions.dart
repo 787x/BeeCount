@@ -22,6 +22,7 @@ class BillingQuickActions extends StatelessWidget {
           Icons.edit_note,
           l10n.billingManualAction
         ),
+        (AppLinkAction.text, Icons.keyboard_outlined, l10n.billingTextAction),
         (AppLinkAction.camera, Icons.camera_alt_rounded, l10n.fabActionCamera),
         (
           AppLinkAction.image,
