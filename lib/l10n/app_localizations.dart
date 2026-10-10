@@ -15919,6 +15919,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry analysis'**
   String get aiDraftRetry;
+
+  /// No description provided for @billingTextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Text billing'**
+  String get billingTextAction;
+
+  /// No description provided for @billingTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Lunch 35, paid with Alipay'**
+  String get billingTextHint;
+
+  /// No description provided for @quickBillingAnalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get quickBillingAnalyze;
+
+  /// No description provided for @quickBillingPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick billing results'**
+  String get quickBillingPolicyTitle;
+
+  /// No description provided for @quickBillingNoBill.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills detected'**
+  String get quickBillingNoBill;
+
+  /// No description provided for @quickBillingNeedsInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete information'**
+  String get quickBillingNeedsInput;
+
+  /// No description provided for @quickBillingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete information'**
+  String get quickBillingReady;
+
+  /// No description provided for @quickBillingNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify'**
+  String get quickBillingNotify;
+
+  /// No description provided for @quickBillingNotifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'End this session and notify when no bills are detected'**
+  String get quickBillingNotifyDesc;
+
+  /// No description provided for @quickBillingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with more information'**
+  String get quickBillingContinue;
+
+  /// No description provided for @quickBillingContinueDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add information and analyze again'**
+  String get quickBillingContinueDesc;
+
+  /// No description provided for @quickBillingClarify.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for details'**
+  String get quickBillingClarify;
+
+  /// No description provided for @quickBillingClarifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask first when amount, type, currency or other essential details are ambiguous'**
+  String get quickBillingClarifyDesc;
+
+  /// No description provided for @quickBillingBestEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'Save when safe'**
+  String get quickBillingBestEffort;
+
+  /// No description provided for @quickBillingBestEffortDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the AI candidate when safe to save; ask for details when required information is missing'**
+  String get quickBillingBestEffortDesc;
+
+  /// No description provided for @quickBillingSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save immediately'**
+  String get quickBillingSave;
+
+  /// No description provided for @quickBillingSaveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as soon as the result is complete'**
+  String get quickBillingSaveDesc;
+
+  /// No description provided for @quickBillingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review before saving'**
+  String get quickBillingReview;
+
+  /// No description provided for @quickBillingReviewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all drafts and save after confirmation'**
+  String get quickBillingReviewDesc;
+
+  /// No description provided for @quickBillingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm billing'**
+  String get quickBillingConfirm;
+
+  /// No description provided for @quickBillingNoBillPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills detected yet. Add an amount, income or expense type, or other transaction details.'**
+  String get quickBillingNoBillPrompt;
+
+  /// No description provided for @quickBillingBestEffortFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Information required for safe billing is still missing. Please add details.'**
+  String get quickBillingBestEffortFallback;
+
+  /// No description provided for @quickBillingNoBillNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'No bill information detected'**
+  String get quickBillingNoBillNotice;
+
+  /// No description provided for @quickBillingAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing bill information...'**
+  String get quickBillingAnalyzing;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

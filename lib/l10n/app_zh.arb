@@ -3553,5 +3553,29 @@
       }
     }
   },
-  "aiDraftRetry": "重试分析"
+  "aiDraftRetry": "重试分析",
+  "billingTextAction": "文字记账",
+  "billingTextHint": "例如：午饭 35 元，支付宝",
+  "quickBillingAnalyze": "开始识别",
+  "quickBillingPolicyTitle": "快捷记账结果处理",
+  "quickBillingNoBill": "未识别到账单",
+  "quickBillingNeedsInput": "信息不足",
+  "quickBillingReady": "信息完整",
+  "quickBillingNotify": "直接提示",
+  "quickBillingNotifyDesc": "没有识别到账单时结束本次记账并提示",
+  "quickBillingContinue": "继续补充信息",
+  "quickBillingContinueDesc": "进入补充页面，可继续输入信息后重新识别",
+  "quickBillingClarify": "补充信息",
+  "quickBillingClarifyDesc": "存在金额、类型、币种等重要歧义时先询问",
+  "quickBillingBestEffort": "尽量直接记账",
+  "quickBillingBestEffortDesc": "已有结果能够安全保存时使用 AI 当前判断；缺少必要信息时仍会要求补充",
+  "quickBillingSave": "直接记账",
+  "quickBillingSaveDesc": "识别完整后立即保存",
+  "quickBillingReview": "记账前确认",
+  "quickBillingReviewDesc": "先展示识别结果，确认后再保存",
+  "quickBillingConfirm": "确认记账",
+  "quickBillingNoBillPrompt": "暂未识别到账单，可补充金额、收支类型或其它交易信息。",
+  "quickBillingBestEffortFallback": "仍缺少安全记账所需的信息，请补充后继续。",
+  "quickBillingNoBillNotice": "未识别到账单信息",
+  "quickBillingAnalyzing": "正在识别账单..."
 }

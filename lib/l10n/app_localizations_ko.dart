@@ -8406,4 +8406,76 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiDraftRetry => '분석 재시도';
+
+  @override
+  String get billingTextAction => '텍스트 기록';
+
+  @override
+  String get billingTextHint => '예: 점심 35, Alipay 결제';
+
+  @override
+  String get quickBillingAnalyze => '분석 시작';
+
+  @override
+  String get quickBillingPolicyTitle => '빠른 기록 결과 처리';
+
+  @override
+  String get quickBillingNoBill => '거래 없음';
+
+  @override
+  String get quickBillingNeedsInput => '정보 부족';
+
+  @override
+  String get quickBillingReady => '정보 완성';
+
+  @override
+  String get quickBillingNotify => '알림';
+
+  @override
+  String get quickBillingNotifyDesc => '거래가 없으면 종료하고 알림 표시';
+
+  @override
+  String get quickBillingContinue => '정보 추가';
+
+  @override
+  String get quickBillingContinueDesc => '정보를 추가하고 다시 분석';
+
+  @override
+  String get quickBillingClarify => '추가 정보 요청';
+
+  @override
+  String get quickBillingClarifyDesc => '금액, 유형, 통화 등 필수 정보가 모호하면 먼저 질문';
+
+  @override
+  String get quickBillingBestEffort => '가능하면 바로 저장';
+
+  @override
+  String get quickBillingBestEffortDesc => '안전하게 저장할 수 있으면 AI의 판단을 사용하고 필수 정보가 없으면 추가 요청';
+
+  @override
+  String get quickBillingSave => '바로 저장';
+
+  @override
+  String get quickBillingSaveDesc => '분석이 완료되면 바로 저장';
+
+  @override
+  String get quickBillingReview => '저장 전 확인';
+
+  @override
+  String get quickBillingReviewDesc => '모든 결과를 표시하고 확인 후 저장';
+
+  @override
+  String get quickBillingConfirm => '기록 확인';
+
+  @override
+  String get quickBillingNoBillPrompt => '거래를 찾지 못했습니다. 금액, 수입 또는 지출 유형 등 거래 정보를 추가하세요.';
+
+  @override
+  String get quickBillingBestEffortFallback => '안전한 기록에 필요한 정보가 부족합니다. 추가 정보를 입력하세요.';
+
+  @override
+  String get quickBillingNoBillNotice => '거래 정보를 찾지 못했습니다';
+
+  @override
+  String get quickBillingAnalyzing => '거래 정보를 분석하는 중...';
 }

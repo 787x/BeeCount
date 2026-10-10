@@ -20,7 +20,7 @@ import '../services/system/logger_service.dart';
 import '../widgets/ai/ai_privacy_consent_dialog.dart';
 import '../widgets/ui/ui.dart';
 
-/// Manual images are analyzed before navigation; only ambiguity opens a page.
+/// Manual images share result decisions with text and transcribed speech.
 class ImageBillingHelper {
   static bool _active = false;
   static Future<void> pickImageForBilling(
@@ -47,6 +47,7 @@ class ImageBillingHelper {
 
     _active = true;
     try {
+      final policy = await container.read(quickBillingPolicyProvider.future);
       final keepOriginal =
           await container.read(attachmentKeepOriginalProvider.future);
       if (!context.mounted) return;
@@ -92,6 +93,7 @@ class ImageBillingHelper {
       final bookkeeper = container.read(aiBookkeeperProvider);
       final attachmentService = container.read(attachmentServiceProvider);
       final session = BillingDraftSession(
+          policy: policy,
           analyze: (images, replies, previous) => bookkeeper.analyzeImages(
               images: images.map((i) => i.recognition).toList(),
               ledgerId: ledger.id,
@@ -139,12 +141,13 @@ class ImageBillingHelper {
             if (!context.mounted) return null;
             return Navigator.of(context).push<BookkeepingResult>(
                 MaterialPageRoute(
-                    settings: const RouteSettings(name: 'billing-clarification'),
+                    settings:
+                        const RouteSettings(name: 'billing-clarification'),
                     builder: (_) => BillingDraftPage(
                         session: session, currency: ledger.currency)));
           });
       hideLoading();
-      if (context.mounted && result != null) _showResult(context, l10n, result);
+      if (context.mounted && result != null) showResult(context, l10n, result);
     } catch (error) {
       hideLoading();
       if (context.mounted) {
@@ -164,14 +167,15 @@ class ImageBillingHelper {
     }
   }
 
-  static void _showResult(
-      BuildContext context, AppLocalizations l10n, BookkeepingResult result) {
+  static void showResult(
+      BuildContext context, AppLocalizations l10n, BookkeepingResult result,
+      {String? noBillMessage}) {
     if (!result.success) {
       showToast(
           context,
           result.failedCount > 0
               ? '${l10n.aiDraftSaved(0, result.failedCount)}\n${l10n.aiOcrCheckLog}'
-              : l10n.aiOcrNoBill);
+              : noBillMessage ?? l10n.aiOcrNoBill);
       return;
     }
     final type = result.firstBill!.type;

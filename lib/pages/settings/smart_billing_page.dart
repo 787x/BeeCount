@@ -1,3 +1,4 @@
+import '../../widgets/ai/quick_billing_policy_settings.dart';
 import '../../services/ai/speech_recognition.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
@@ -502,6 +503,9 @@ class SmartBillingPage extends ConsumerWidget {
                   ),
                 ),
 
+                const SizedBox(height: 16),
+
+                const QuickBillingPolicySettings(),
                 const SizedBox(height: 16),
 
                 // 语音记账设置（触发方式 + 静音灵敏度）

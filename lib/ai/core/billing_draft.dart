@@ -34,6 +34,26 @@ class BillingDraft {
     );
   }
 
+  /// Opt-in may accept uncertainty, never missing core values or invalid accounts.
+  bool get canAcceptCandidate =>
+      bill.amount != null &&
+      bill.amount!.isFinite &&
+      bill.amount != 0 &&
+      bill.type != null &&
+      !uncertainFields.contains('transfer_accounts') &&
+      (bill.type != BillType.transfer ||
+          (bill.fromAccount != null &&
+              bill.fromAccount!.trim().isNotEmpty &&
+              bill.toAccount != null &&
+              bill.toAccount!.trim().isNotEmpty &&
+              bill.fromAccount!.trim() != bill.toAccount!.trim()));
+
+  /// Keeps strict conversion unchanged for all other callers.
+  BillingDraft acceptCandidate() {
+    if (!canAcceptCandidate) throw StateError('Unsafe draft candidate');
+    return BillingDraft(bill, sourceImageIndexes: sourceImageIndexes);
+  }
+
   List<int> attachmentIndexes(int imageCount) => sourceImageIndexes.isEmpty
       ? List.generate(imageCount, (index) => index)
       : sourceImageIndexes;

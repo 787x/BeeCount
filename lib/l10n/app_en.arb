@@ -3629,5 +3629,29 @@
       }
     }
   },
-  "aiDraftRetry": "Retry analysis"
+  "aiDraftRetry": "Retry analysis",
+  "billingTextAction": "Text billing",
+  "billingTextHint": "For example: Lunch 35, paid with Alipay",
+  "quickBillingAnalyze": "Analyze",
+  "quickBillingPolicyTitle": "Quick billing results",
+  "quickBillingNoBill": "No bills detected",
+  "quickBillingNeedsInput": "Incomplete information",
+  "quickBillingReady": "Complete information",
+  "quickBillingNotify": "Notify",
+  "quickBillingNotifyDesc": "End this session and notify when no bills are detected",
+  "quickBillingContinue": "Continue with more information",
+  "quickBillingContinueDesc": "Add information and analyze again",
+  "quickBillingClarify": "Ask for details",
+  "quickBillingClarifyDesc": "Ask first when amount, type, currency or other essential details are ambiguous",
+  "quickBillingBestEffort": "Save when safe",
+  "quickBillingBestEffortDesc": "Accept the AI candidate when safe to save; ask for details when required information is missing",
+  "quickBillingSave": "Save immediately",
+  "quickBillingSaveDesc": "Save as soon as the result is complete",
+  "quickBillingReview": "Review before saving",
+  "quickBillingReviewDesc": "Show all drafts and save after confirmation",
+  "quickBillingConfirm": "Confirm billing",
+  "quickBillingNoBillPrompt": "No bills detected yet. Add an amount, income or expense type, or other transaction details.",
+  "quickBillingBestEffortFallback": "Information required for safe billing is still missing. Please add details.",
+  "quickBillingNoBillNotice": "No bill information detected",
+  "quickBillingAnalyzing": "Analyzing bill information..."
 }

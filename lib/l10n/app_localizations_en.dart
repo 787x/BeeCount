@@ -8406,4 +8406,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiDraftRetry => 'Retry analysis';
+
+  @override
+  String get billingTextAction => 'Text billing';
+
+  @override
+  String get billingTextHint => 'For example: Lunch 35, paid with Alipay';
+
+  @override
+  String get quickBillingAnalyze => 'Analyze';
+
+  @override
+  String get quickBillingPolicyTitle => 'Quick billing results';
+
+  @override
+  String get quickBillingNoBill => 'No bills detected';
+
+  @override
+  String get quickBillingNeedsInput => 'Incomplete information';
+
+  @override
+  String get quickBillingReady => 'Complete information';
+
+  @override
+  String get quickBillingNotify => 'Notify';
+
+  @override
+  String get quickBillingNotifyDesc => 'End this session and notify when no bills are detected';
+
+  @override
+  String get quickBillingContinue => 'Continue with more information';
+
+  @override
+  String get quickBillingContinueDesc => 'Add information and analyze again';
+
+  @override
+  String get quickBillingClarify => 'Ask for details';
+
+  @override
+  String get quickBillingClarifyDesc => 'Ask first when amount, type, currency or other essential details are ambiguous';
+
+  @override
+  String get quickBillingBestEffort => 'Save when safe';
+
+  @override
+  String get quickBillingBestEffortDesc => 'Accept the AI candidate when safe to save; ask for details when required information is missing';
+
+  @override
+  String get quickBillingSave => 'Save immediately';
+
+  @override
+  String get quickBillingSaveDesc => 'Save as soon as the result is complete';
+
+  @override
+  String get quickBillingReview => 'Review before saving';
+
+  @override
+  String get quickBillingReviewDesc => 'Show all drafts and save after confirmation';
+
+  @override
+  String get quickBillingConfirm => 'Confirm billing';
+
+  @override
+  String get quickBillingNoBillPrompt => 'No bills detected yet. Add an amount, income or expense type, or other transaction details.';
+
+  @override
+  String get quickBillingBestEffortFallback => 'Information required for safe billing is still missing. Please add details.';
+
+  @override
+  String get quickBillingNoBillNotice => 'No bill information detected';
+
+  @override
+  String get quickBillingAnalyzing => 'Analyzing bill information...';
 }

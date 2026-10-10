@@ -1,11 +1,18 @@
 import '../../ai/core/billing_draft.dart';
 import 'billing_image_service.dart';
 import 'bookkeeping_result.dart';
+import 'quick_billing_policy.dart';
 
-enum BillingDraftState { analyzing, needsInput, ready, saving, done }
+enum BillingDraftState { analyzing, noBill, needsInput, ready, saving, done }
 
-/// Ephemeral session. Only a reliable ready result can invoke the persister.
+/// Ephemeral session. Persistence requires readiness or explicit safe acceptance.
 class BillingDraftSession {
+  final QuickBillingResultPolicy policy;
+  final bool allowImages;
+  bool _analysisFailed = false;
+  QuickBillingDecision get decision => _analysisFailed || analysis == null
+      ? QuickBillingDecision.clarify
+      : policy.decide(analysis!);
   final List<BillingImageFiles> _images = [];
   final List<String> _replies = [];
   final Future<BillingDraftAnalysis> Function(
@@ -18,7 +25,11 @@ class BillingDraftSession {
   Future<void>? _operation;
   Future<void>? _disposal;
 
-  BillingDraftSession({required this.analyze, required this.persist});
+  BillingDraftSession(
+      {required this.analyze,
+      required this.persist,
+      this.policy = const QuickBillingResultPolicy(),
+      this.allowImages = true});
   List<BillingImageFiles> get images => List.unmodifiable(_images);
   List<String> get replies => List.unmodifiable(_replies);
 
@@ -46,12 +57,14 @@ class BillingDraftSession {
       final next = await analyze(images, replies, analysis);
       if (_disposed) return;
       analysis = next;
+      _analysisFailed = false;
       state = next.ready
           ? BillingDraftState.ready
           : next.drafts.isEmpty && !next.needsInput
-              ? BillingDraftState.done
+              ? BillingDraftState.noBill
               : BillingDraftState.needsInput;
     } catch (_) {
+      _analysisFailed = true;
       // The owner cleans terminal initial failures. A clarification retry
       // needs the same images, replies and last successful draft context.
       state = BillingDraftState.needsInput;
@@ -61,7 +74,14 @@ class BillingDraftSession {
 
   /// Starts persistence once; rebuilding or retrying cannot replay a saved batch.
   Future<BookkeepingResult?> saveReady() async {
-    if (_disposed || state != BillingDraftState.ready) return null;
+    if (_disposed ||
+        _analysisFailed ||
+        (state != BillingDraftState.ready &&
+            state != BillingDraftState.needsInput) ||
+        (decision != QuickBillingDecision.persist &&
+            decision != QuickBillingDecision.confirm)) {
+      return null;
+    }
     state = BillingDraftState.saving;
     final work = _save();
     _operation = work.then((_) {}, onError: (Object _, StackTrace __) {});
@@ -70,7 +90,10 @@ class BillingDraftSession {
 
   Future<BookkeepingResult> _save() async {
     try {
-      return await persist(analysis!.drafts, images);
+      final drafts = analysis!.ready
+          ? analysis!.drafts
+          : analysis!.drafts.map((d) => d.acceptCandidate()).toList();
+      return await persist(drafts, images);
     } finally {
       // Even a late failure may follow a successful write. Never replay the batch.
       state = BillingDraftState.done;

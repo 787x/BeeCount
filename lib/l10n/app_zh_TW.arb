@@ -3057,5 +3057,29 @@
       }
     }
   },
-  "aiDraftRetry": "重試分析"
+  "aiDraftRetry": "重試分析",
+  "billingTextAction": "文字記帳",
+  "billingTextHint": "例如：午餐 35 元，支付寶",
+  "quickBillingAnalyze": "開始辨識",
+  "quickBillingPolicyTitle": "快捷記帳結果處理",
+  "quickBillingNoBill": "未辨識到帳單",
+  "quickBillingNeedsInput": "資訊不足",
+  "quickBillingReady": "資訊完整",
+  "quickBillingNotify": "直接提示",
+  "quickBillingNotifyDesc": "沒有辨識到帳單時結束本次記帳並提示",
+  "quickBillingContinue": "繼續補充資訊",
+  "quickBillingContinueDesc": "進入補充頁面，可繼續輸入資訊後重新辨識",
+  "quickBillingClarify": "補充資訊",
+  "quickBillingClarifyDesc": "存在金額、類型、幣別等重要歧義時先詢問",
+  "quickBillingBestEffort": "盡量直接記帳",
+  "quickBillingBestEffortDesc": "已有結果能夠安全儲存時使用 AI 目前判斷；缺少必要資訊時仍會要求補充",
+  "quickBillingSave": "直接記帳",
+  "quickBillingSaveDesc": "辨識完整後立即儲存",
+  "quickBillingReview": "記帳前確認",
+  "quickBillingReviewDesc": "先顯示辨識結果，確認後再儲存",
+  "quickBillingConfirm": "確認記帳",
+  "quickBillingNoBillPrompt": "暫未辨識到帳單，可補充金額、收支類型或其他交易資訊。",
+  "quickBillingBestEffortFallback": "仍缺少安全記帳所需的資訊，請補充後繼續。",
+  "quickBillingNoBillNotice": "未辨識到帳單資訊",
+  "quickBillingAnalyzing": "正在辨識帳單..."
 }

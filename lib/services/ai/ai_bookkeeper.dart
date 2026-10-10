@@ -157,6 +157,18 @@ class AiBookkeeper {
         .analyze(images, context, replies, previous);
   }
 
+  /// Read-only draft extraction for manual text and transcribed speech.
+  Future<BillingDraftAnalysis> analyzeText(
+      {required String text,
+      required int ledgerId,
+      required List<String> replies,
+      BillingDraftAnalysis? previous}) async {
+    final context = await AiExtractionContext.forLedger(
+        repository: _repo, ledgerId: ledgerId);
+    return const BillingDraftAnalyzer()
+        .analyzeText(text, context, replies, previous);
+  }
+
   // ============================================================
   // 内部:落库 + 聚合结果
   // ============================================================
