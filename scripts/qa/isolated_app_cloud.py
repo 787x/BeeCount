@@ -26,6 +26,8 @@ PROJECT = Path(__file__).resolve().parents[2]
 SCENARIOS = {
     'transaction-copy': 'integration_test/transaction_copy_live_test.dart',
     'category-parent': 'integration_test/category_parent_live_test.dart',
+    'web-transaction-images': 'integration_test/web_transaction_images_live_test.dart',
+    'mcp-receipt-attachments': 'integration_test/mcp_receipt_attachments_live_test.dart',
 }
 
 
@@ -87,13 +89,44 @@ def export_commit(repo, sha, target):
         tar.extractall(target, filter='data')
 
 
+def read_skill_identity(args):
+    """新环境默认绑定项目 skill；保留旧命令的来源定位能力。"""
+    if args.skill_dir:
+        source = Path(args.skill_dir).expanduser().resolve()
+    elif args.skill_repo:
+        repo = Path(args.skill_repo).expanduser().resolve()
+        source = repo / '.agents/skills/isolated-app-cloud-qa'
+        if not source.is_dir():
+            source = repo / 'plugins/app-cloud-qa/skills/isolated-app-cloud-qa'
+    else:
+        source = PROJECT / '.agents/skills/isolated-app-cloud-qa'
+    if not (source / 'SKILL.md').is_file():
+        raise ValueError('QA skill missing: use the project .agents/skills directory or --skill-dir')
+    digest = hashlib.sha256()
+    for path in sorted(source.rglob('*')):
+        if path.is_symlink():
+            raise ValueError('QA skill resources must be regular files inside the skill directory')
+        if path.is_file():
+            digest.update(str(path.relative_to(source)).encode() + b'\0' + path.read_bytes())
+    version = None
+    for line in (source / 'SKILL.md').read_text().splitlines():
+        if line.startswith('  version:'):
+            version = line.split(':', 1)[1].strip().strip('"\'')
+            break
+    return source, dict(
+        skill_sha=command(['git', '-C', source, 'rev-parse', 'HEAD']),
+        skill_source_hash=digest.hexdigest(), skill_version=version)
+
+
 def prepare(args):
+    skill_source, skill_identity = read_skill_identity(args)
     root = Path(tempfile.mkdtemp(prefix='beecount-qa-')).resolve()
     root.chmod(0o700)
     run_id = root.name
     (root / '.qa-owner').write_text(run_id)
     for name in ('cloud-data', 'cloud-runtime', 'evidence', 'raw-logs', 'private-backups'):
         (root / name).mkdir(mode=0o700)
+    shutil.copytree(skill_source, root / 'skill-source')
     cloud = Path(args.cloud_repo).resolve()
     sha = command(['git', '-C', cloud, 'rev-parse', args.cloud_ref])
     export_commit(cloud, sha, root / 'cloud-source')
@@ -112,8 +145,7 @@ def prepare(args):
         xcode=command(['xcodebuild', '-version']),
         host_python=sys.version.split()[0],
         cloud_python=command([cloud / '.venv/bin/python', '-c', 'import sys; print(sys.version.split()[0])']))
-    if args.skill_repo:
-        manifest['skill_sha'] = command(['git', '-C', args.skill_repo, 'rev-parse', 'HEAD'])
+    manifest.update(skill_identity)
     write_json(root / 'manifest.json', manifest)
     credentials = dict(email=f'{run_id}@qa.example.com', password=secrets.token_urlsafe(24),
                        jwt_secret=secrets.token_hex(32), admin_password=secrets.token_urlsafe(24))
@@ -291,6 +323,7 @@ def build(root, manifest, flutter):
         print(f'QA build stage {index + 1}; logs stay in private run directory', flush=True)
         with (root / f'raw-logs/build-{index}.log').open('w') as log:
             subprocess.run(args, cwd=source, stdout=log, stderr=log, check=True)
+    manifest['resolved_lock_sha256'] = hashlib.sha256((source / 'pubspec.lock').read_bytes()).hexdigest()
     app = source / 'build/ios/iphonesimulator/Runner.app'
     for bundle, entitlements in [(p, source / 'ios/BeeCountWidgetExtension.entitlements')
                                  for p in (app / 'PlugIns').glob('*.appex')] + [
@@ -361,7 +394,8 @@ def run(root, manifest, flutter):
     write_json(root / 'evidence/cloud-projection.json', dict(migration=migration, transactions=rows, categories=categories))
     public = {k: manifest[k] for k in ('run_id', 'app_id', 'app_sha', 'cloud_sha', 'runtime', 'udid',
                                       'cloud_origin', 'source_hash', 'artifact_hash', 'verified_bundles', 'drive_exit_code')}
-    public.update(tool_versions=manifest.get('tool_versions'), skill_sha=manifest.get('skill_sha'))
+    public.update(tool_versions=manifest.get('tool_versions'), skill_sha=manifest.get('skill_sha'), resolved_lock_sha256=manifest.get('resolved_lock_sha256'))
+    public.update(skill_source_hash=manifest.get('skill_source_hash'), skill_version=manifest.get('skill_version'))
     write_json(root / 'evidence/environment.json', public)
     print(f'Acceptance passed; evidence: {root / "evidence"}', flush=True)
 
@@ -614,6 +648,7 @@ def restart_check(root, manifest, flutter):
     with (root / 'raw-logs/normal-build.log').open('w') as log:
         subprocess.run([flutter, 'build', 'ios', '--debug', '--simulator', '--target', 'lib/main.dart'],
                        cwd=source, stdout=log, stderr=log, check=True)
+    manifest['resolved_lock_sha256'] = hashlib.sha256((source / 'pubspec.lock').read_bytes()).hexdigest()
     app = source / 'build/ios/iphonesimulator/Runner.app'
     for bundle, entitlements in [(p, source / 'ios/BeeCountWidgetExtension.entitlements')
                                  for p in (app / 'PlugIns').glob('*.appex')] + [
@@ -647,7 +682,7 @@ def restart_check(root, manifest, flutter):
         copy = next(r for r in rows if r['sync_id'] == report['copy_sync_id'])
         if copy['note'] != 'QA Cloud 修改后' or copy['amount'] != 55.5:
             raise ValueError('Normal App restart did not retain the synchronized copy')
-    else:
+    elif manifest.get('scenario') == 'category-parent':
         with sqlite3.connect(f'file:{app_db}?mode=ro', uri=True) as db:
             db.row_factory = sqlite3.Row
             parent = db.execute('SELECT id, name FROM categories WHERE sync_id = ?',
@@ -659,6 +694,24 @@ def restart_check(root, manifest, flutter):
                 if child is None or child['parent_id'] != parent['id'] or child['level'] != 2:
                     raise ValueError('Normal App restart lost a stable child category relationship')
         rows = dict(transactions=rows, parent_name=parent['name'], child_sync_ids=report['child_sync_ids'])
+    else:
+        with sqlite3.connect(f'file:{app_db}?mode=ro', uri=True) as db:
+            db.row_factory = sqlite3.Row
+            is_mcp = manifest.get('scenario') == 'mcp-receipt-attachments'
+            sid = report['mcp_transaction_sync_id'] if is_mcp else report['web_transaction_sync_id']
+            note, amount = ('QA MCP最终小票', 78.8) if is_mcp else ('QA Web最终图片', 45.6)
+            tx = db.execute('SELECT id, note, amount FROM transactions WHERE sync_id = ?', (sid,)).fetchone()
+            if tx is None or tx['note'] != note or tx['amount'] != amount:
+                raise ValueError('Normal App restart lost the synchronized image transaction')
+            attachments = [dict(r) for r in db.execute('SELECT file_name, cloud_file_id, cloud_sha256, sort_order FROM transaction_attachments WHERE transaction_id = ? ORDER BY sort_order', (tx['id'],))]
+            expected = report['final_app_files']
+            if len(attachments) != len(expected):
+                raise ValueError('Normal App restart lost attachment metadata')
+            for row, ref in zip(attachments, expected):
+                file = container / 'Documents/attachments' / row['file_name']
+                if row['cloud_file_id'] != ref['cloudFileId'] or row['cloud_sha256'] != ref['sha256'] or not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != ref['sha256']:
+                    raise ValueError('Normal App restart attachment identity/bytes mismatch')
+        rows = dict(transactions=rows, attachments=attachments)
     report['cases'].append(dict(id='normal-restart', status='PASS', detail='Normal lib/main.dart entry preserves synchronized data and native UI verifies the scenario markers'))
     write_json(root / 'evidence/acceptance.json', report)
     write_json(root / 'evidence/restart-persistence.json', rows)
@@ -677,13 +730,16 @@ def main():
     parser.add_argument('--cloud-repo')
     parser.add_argument('--cloud-ref', default='origin/main')
     parser.add_argument('--scenario', choices=tuple(SCENARIOS), default='transaction-copy')
-    parser.add_argument('--skill-repo', help='Record the skill repository HEAD used for this run')
+    parser.add_argument('--skill-dir', help='QA skill directory; defaults to the App project .agents/skills')
+    parser.add_argument('--skill-repo', help='Legacy skill repository lookup; prefer the project default or --skill-dir')
     parser.add_argument('--runtime', default='com.apple.CoreSimulator.SimRuntime.iOS-26-5')
     parser.add_argument('--flutter', default=shutil.which('flutter'))
     args = parser.parse_args()
     if args.action == 'prepare':
         if not args.cloud_repo:
             parser.error('prepare requires --cloud-repo')
+        if args.skill_dir and args.skill_repo:
+            parser.error('choose --skill-dir or legacy --skill-repo, not both')
         prepare(args)
     else:
         if not args.run:
