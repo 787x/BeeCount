@@ -1,6 +1,7 @@
 import 'package:agentcore/agentcore.dart' show AgentNativeModelPhase;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:beecount/l10n/app_localizations.dart';
 import 'package:beecount/widgets/ai/agent_execution_timeline.dart';
 import 'package:beecount/widgets/ai/agent_markdown_text.dart';
@@ -12,6 +13,26 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: child),
       );
+  testWidgets('流式回答保留金额并在公式闭合后渲染', (tester) async {
+    for (final source in [
+      r'$35 与 $50；\(',
+      r'$35 与 $50；\(x=',
+      r'$35 与 $50；\(x=1\)'
+    ]) {
+      await tester.pumpWidget(host(AgentExecutionTimeline(
+        isStreaming: true,
+        streamingText: source,
+        steps: const [],
+      )));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining(r'$35'), findsOneWidget);
+      expect(find.byType(Math),
+          source.endsWith(r'\)') ? findsOneWidget : findsNothing);
+    }
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
   testWidgets('执行详情默认折叠，展开后仅显示可读查询范围和摘要', (tester) async {
     await tester.pumpWidget(
         host(const AgentExecutionTimeline(isStreaming: false, steps: [

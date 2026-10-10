@@ -37,6 +37,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_agent_ui/flutter_agent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -328,23 +329,29 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('第一段思考'), findsOneWidget);
     model.request!.nativeStreamSink
-        ?.call(const core.AgentNativeReasoningDelta('持续增长'));
+        ?.call(const core.AgentNativeReasoningDelta(r'持续增长 计算：\(x='));
     await tester.pump();
-    expect(find.text('第一段思考持续增长'), findsOneWidget);
+    expect(find.textContaining('第一段思考持续增长'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    model.request!.nativeStreamSink
+        ?.call(const core.AgentNativeReasoningDelta(r'1\)'));
+    await tester.pump();
+    expect(find.byType(Math), findsOneWidget);
     model.request!.nativeStreamSink?.call(const core.AgentNativeModelActivity(
         core.AgentNativeModelPhase.awaitingResponse));
     model.request!.nativeStreamSink
         ?.call(const core.AgentNativeReasoningDelta('第二轮思考'));
-    model.answer.complete(const core.AgentTurn.finalText('最终回答'));
+    model.answer
+        .complete(const core.AgentTurn.finalText(r'最终回答 $35 \(\frac{1}{2}\)'));
     await tester.runAsync(() => repository
         .watchMessages(1)
         .firstWhere((rows) => rows.any((row) => row.role == 'assistant')));
     await tester.pumpAndSettle();
     final rows = await database.select(database.messages).get();
     final answer = rows.singleWhere((e) => e.role == 'assistant');
-    expect(answer.content, '最终回答');
+    expect(answer.content, r'最终回答 $35 \(\frac{1}{2}\)');
     expect(AssistantReasoningMetadata.decode(answer.metadata),
-        '第一段思考持续增长\n\n第二轮思考');
+        '第一段思考持续增长 计算：\\(x=1\\)\n\n第二轮思考');
     expect(find.textContaining('第一段思考'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
@@ -354,10 +361,12 @@ void main() {
     expect(find.textContaining('第一段思考'), findsNothing);
     await tester.tap(find.byKey(ValueKey('agent-answer-copy-${answer.id}')));
     await tester.pump();
-    expect(copied, '最终回答');
+    expect(copied, r'最终回答 $35 \(\frac{1}{2}\)');
+    expect(find.byType(Math), findsOneWidget);
     await tester.tap(find.text('思考过程'));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('第一段思考持续增长\n\n第二轮思考'), findsOneWidget);
+    expect(find.textContaining('第一段思考持续增长'), findsOneWidget);
+    expect(find.byType(Math), findsNWidgets(2));
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
     expect(tester.takeException(), isNull);

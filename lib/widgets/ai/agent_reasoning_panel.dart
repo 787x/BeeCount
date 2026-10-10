@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'agent_markdown_text.dart';
 
 /// Independent display data: copying answers continues to use final content.
 class AgentReasoningPanel extends StatelessWidget {
@@ -18,7 +19,7 @@ class AgentReasoningPanel extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: Align(
               alignment: Alignment.centerLeft,
-              child: SelectableText(reasoning)),
+              child: AgentMarkdownText(data: reasoning)),
         )
       ],
     );
